@@ -1,4 +1,3 @@
 package com.wafflestudio.spring2025.timetableLecture.repository
 
-interface TimetableLectureRepository {
-}
+interface TimetableLectureRepository

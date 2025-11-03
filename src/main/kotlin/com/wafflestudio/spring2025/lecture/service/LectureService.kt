@@ -1,4 +1,3 @@
 package com.wafflestudio.spring2025.lecture.service
 
-class LectureService {
-}
+class LectureService

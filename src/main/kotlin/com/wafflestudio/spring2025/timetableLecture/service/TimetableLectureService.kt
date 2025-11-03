@@ -1,4 +1,3 @@
 package com.wafflestudio.spring2025.timetableLecture.service
 
-class TimetableLectureService {
-}
+class TimetableLectureService
