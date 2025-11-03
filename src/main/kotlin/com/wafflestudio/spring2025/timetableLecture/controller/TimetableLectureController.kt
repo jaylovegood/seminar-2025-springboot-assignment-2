@@ -1,0 +1,3 @@
+package com.wafflestudio.spring2025.timetableLecture.controller
+
+class TimetableLectureController
