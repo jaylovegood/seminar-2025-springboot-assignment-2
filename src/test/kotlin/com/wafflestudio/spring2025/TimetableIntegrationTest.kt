@@ -1,13 +1,21 @@
 package com.wafflestudio.spring2025
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
+import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
+import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @SpringBootTest
@@ -20,10 +28,29 @@ class TimetableIntegrationTest
         private val mvc: MockMvc,
         private val mapper: ObjectMapper,
         private val dataGenerator: DataGenerator,
+        private val timetableRepository: TimetableRepository,
     ) {
         @Test
         fun `should create a timetable`() {
             // 시간표를 생성할 수 있다
+            val (user, token) = dataGenerator.generateUser()
+            val timetableName = "timetableName1"
+            val year = 2025
+            val semester = Semester.SPRING
+
+            val request = CreateTimetableRequest(timetableName, year, semester)
+            mvc
+                .perform(
+                    post("/api/v1/timetables")
+                        .header("Authorization", "Bearer $token")
+                        .content(mapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON),
+                ).andExpect(status().`is`(200))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.user.id").value(user.id!!))
+                .andExpect(jsonPath("$.timetableName").value(request.timetableName))
+                .andExpect(jsonPath("$.year").value(request.year))
+                .andExpect(jsonPath("$.semester").value(request.semester.name))
         }
 
         @Test
@@ -86,8 +113,8 @@ class TimetableIntegrationTest
             // 다른 사람의 시간표에서는 강의를 삭제할 수 없다
         }
 
+        //        @Disabled("곧 안내드리겠습니다")
         @Test
-        @Disabled("곧 안내드리겠습니다")
         fun `should fetch and save course information from SNU course registration site`() {
             // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
         }
