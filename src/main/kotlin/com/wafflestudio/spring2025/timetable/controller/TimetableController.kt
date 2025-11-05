@@ -76,7 +76,7 @@ class TimetableController(
         return ResponseEntity.ok(timetable)
     }
 
-    @Operation(summary = "시간표 목록", description = "사용자의 모든 시간표를 불러옵니다.")
+    @Operation(summary = "시간표 목록 조회", description = "사용자의 모든 시간표를 불러옵니다.")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "시간표 목록 불러오기 성공"),
@@ -93,7 +93,7 @@ class TimetableController(
         return ResponseEntity.ok(timetables)
     }
 
-    @Operation(summary = "시간표 조회", description = "시간표 아이디로 시간표를 조회합니다.")
+    @Operation(summary = "시간표 단건 조회", description = "시간표 아이디로 특정 시간표를 조회합니다.")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "시간표 조회 성공"),
