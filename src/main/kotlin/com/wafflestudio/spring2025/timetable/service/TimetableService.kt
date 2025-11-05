@@ -21,6 +21,18 @@ class TimetableService(
             .findAllByUserId(userId)
             .map { TimetableDto(it) }
 
+    fun get(
+        user: User,
+        id: Long,
+    ): TimetableDto {
+        val timetable =
+            timetableRepository
+                .findByIdOrNull(id)
+                ?: throw TimetableNotFoundException()
+
+        return TimetableDto(timetable, user)
+    }
+
     fun create(
         user: User,
         timetableName: String,

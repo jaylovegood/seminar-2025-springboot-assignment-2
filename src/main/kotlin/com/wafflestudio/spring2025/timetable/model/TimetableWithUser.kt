@@ -5,7 +5,7 @@ import org.springframework.data.relational.core.mapping.Embedded
 
 data class TimetableWithUser(
     val id: Long,
-    @Embedded.Nullable(prefix = "user_")
+    @Embedded.Nullable(prefix = "owner_")
     val user: User?,
     val timetableName: String,
     val year: Int,
