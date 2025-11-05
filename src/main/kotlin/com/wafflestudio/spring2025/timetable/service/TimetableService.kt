@@ -1,6 +1,8 @@
 package com.wafflestudio.spring2025.timetable.service
 
 import com.wafflestudio.spring2025.common.Semester
+import com.wafflestudio.spring2025.post.PostNotFoundException
+import com.wafflestudio.spring2025.post.dto.core.PostDto
 import com.wafflestudio.spring2025.timetable.TimetableNameBlankException
 import com.wafflestudio.spring2025.timetable.TimetableNameConflictException
 import com.wafflestudio.spring2025.timetable.TimetableNotFoundException
@@ -20,6 +22,15 @@ class TimetableService(
         timetableRepository
             .findAllByUserId(userId)
             .map { TimetableDto(it) }
+
+    fun get(user: User, id: Long): TimetableDto {
+        val timetable =
+            timetableRepository
+                .findByIdOrNull(id)
+                ?: throw TimetableNotFoundException()
+
+        return TimetableDto(timetable, user)
+    }
 
     fun create(
         user: User,
