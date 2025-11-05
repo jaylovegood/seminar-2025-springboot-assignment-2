@@ -38,7 +38,7 @@ class TimetableController(
         return ResponseEntity.ok(timetable)
     }
 
-    @PutMapping("/{Id}")
+    @PutMapping("/{id}")
     fun update(
         @PathVariable id: Long,
         @LoggedInUser user: User,
@@ -64,7 +64,7 @@ class TimetableController(
         return ResponseEntity.ok(timetables)
     }
 
-    @DeleteMapping("/{Id}")
+    @DeleteMapping("/{id}")
     fun delete(
         @PathVariable id: Long,
         @LoggedInUser user: User,
