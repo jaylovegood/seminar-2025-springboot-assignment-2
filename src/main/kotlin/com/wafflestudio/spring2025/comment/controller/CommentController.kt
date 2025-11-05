@@ -34,7 +34,7 @@ class CommentController(
         value = [
             ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 게시물"),
-        ]
+        ],
     )
     fun list(
         @PathVariable postId: Long,
@@ -50,7 +50,7 @@ class CommentController(
             ApiResponse(responseCode = "200", description = "댓글 생성 성공"),
             ApiResponse(responseCode = "400", description = "댓글 공백"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 게시물"),
-        ]
+        ],
     )
     fun create(
         @PathVariable postId: Long,
@@ -73,8 +73,8 @@ class CommentController(
             ApiResponse(responseCode = "200", description = "댓글 수정 성공"),
             ApiResponse(responseCode = "400", description = "댓글 공백"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 댓글"),
-            ApiResponse(responseCode = "403", description = "수정할 수 없는 댓글")
-        ]
+            ApiResponse(responseCode = "403", description = "수정할 수 없는 댓글"),
+        ],
     )
     fun update(
         @PathVariable postId: Long,
@@ -98,8 +98,8 @@ class CommentController(
         value = [
             ApiResponse(responseCode = "204", description = "댓글 삭제 성공"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 댓글"),
-            ApiResponse(responseCode = "403", description = "삭제할 수 없는 댓글")
-        ]
+            ApiResponse(responseCode = "403", description = "삭제할 수 없는 댓글"),
+        ],
     )
     fun delete(
         @PathVariable postId: Long,

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import io.swagger.v3.oas.annotations.tags.Tag
 
 @Tag(name = "Post", description = "게시물 관리 API")
 @RestController
@@ -36,8 +36,8 @@ class PostController(
         value = [
             ApiResponse(responseCode = "200", description = "게시물 생성 성공"),
             ApiResponse(responseCode = "400", description = "게시물 제목 또는 내용 공백"),
-            ApiResponse(responseCode = "404", description = "존재하지 않는 게시판")
-        ]
+            ApiResponse(responseCode = "404", description = "존재하지 않는 게시판"),
+        ],
     )
     fun create(
         @Parameter(hidden = true) @LoggedInUser user: User,
@@ -59,8 +59,8 @@ class PostController(
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "게시물 목록 조회 성공"),
-            ApiResponse(responseCode = "404", description = "존재하지 않는 게시판")
-        ]
+            ApiResponse(responseCode = "404", description = "존재하지 않는 게시판"),
+        ],
     )
     fun page(
         @PathVariable boardId: Long,
@@ -83,8 +83,8 @@ class PostController(
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "게시물 조회 성공"),
-            ApiResponse(responseCode = "404", description = "존재하지 않는 게시물")
-        ]
+            ApiResponse(responseCode = "404", description = "존재하지 않는 게시물"),
+        ],
     )
     fun get(
         @PathVariable id: Long,
@@ -100,8 +100,8 @@ class PostController(
             ApiResponse(responseCode = "200", description = "게시물 조회 성공"),
             ApiResponse(responseCode = "400", description = "게시물 제목 또는 내용 공백"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 게시물"),
-            ApiResponse(responseCode = "403", description = "수정할 수 없는 게시물")
-        ]
+            ApiResponse(responseCode = "403", description = "수정할 수 없는 게시물"),
+        ],
     )
     fun update(
         @PathVariable id: Long,
@@ -124,8 +124,8 @@ class PostController(
         value = [
             ApiResponse(responseCode = "204", description = "게시물 삭제 성공"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 게시물"),
-            ApiResponse(responseCode = "403", description = "수정할 수 없는 게시물")
-        ]
+            ApiResponse(responseCode = "403", description = "수정할 수 없는 게시물"),
+        ],
     )
     fun delete(
         @PathVariable id: Long,

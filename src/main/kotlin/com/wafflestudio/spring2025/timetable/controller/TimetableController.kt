@@ -9,10 +9,10 @@ import com.wafflestudio.spring2025.timetable.service.TimetableService
 import com.wafflestudio.spring2025.user.LoggedInUser
 import com.wafflestudio.spring2025.user.model.User
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -35,8 +35,8 @@ class TimetableController(
         value = [
             ApiResponse(responseCode = "200", description = "시간표 생성 성공"),
             ApiResponse(responseCode = "400", description = "시간표 이름 공백"),
-            ApiResponse(responseCode = "409", description = "중복된 시간표 이름")
-        ]
+            ApiResponse(responseCode = "409", description = "중복된 시간표 이름"),
+        ],
     )
     fun create(
         @RequestBody createRequest: CreateTimetableRequest,
@@ -59,7 +59,7 @@ class TimetableController(
             ApiResponse(responseCode = "400", description = "시간표 이름 공백"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 시간표"),
             ApiResponse(responseCode = "403", description = "수정할 수 없는 시간표"),
-        ]
+        ],
     )
     @PatchMapping("/{id}")
     fun update(
@@ -80,7 +80,7 @@ class TimetableController(
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "시간표 목록 불러오기 성공"),
-        ]
+        ],
     )
     @GetMapping
     fun list(
@@ -98,7 +98,7 @@ class TimetableController(
         value = [
             ApiResponse(responseCode = "200", description = "시간표 조회 성공"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 시간표"),
-        ]
+        ],
     )
     @GetMapping("/{id}")
     fun get(
@@ -119,7 +119,7 @@ class TimetableController(
             ApiResponse(responseCode = "204", description = "시간표 삭제 성공"),
             ApiResponse(responseCode = "404", description = "존재하지 않는 시간표"),
             ApiResponse(responseCode = "403", description = "삭제할 수 없는 시간표"),
-        ]
+        ],
     )
     @DeleteMapping("/{id}")
     fun delete(

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalTime
 
 @Schema(
-    description = "강의 시간"
+    description = "강의 시간",
 )
 data class LectureTime(
     @Schema(description = "강의 요일") val dayOfWeek: DayOfWeek,
