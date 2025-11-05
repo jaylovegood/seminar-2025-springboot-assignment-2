@@ -1,3 +1,5 @@
 package com.wafflestudio.spring2025.timetable.dto
 
-class UpdateTimetableRequest
+class UpdateTimetableRequest(
+    var timetableName: String,
+)
