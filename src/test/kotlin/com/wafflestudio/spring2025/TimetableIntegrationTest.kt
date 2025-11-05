@@ -1,9 +1,12 @@
 package com.wafflestudio.spring2025
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
+import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
+import com.wafflestudio.spring2025.timetable.model.Timetable
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,6 +59,31 @@ class TimetableIntegrationTest
         @Test
         fun `should retrieve all own timetables`() {
             // 자신의 모든 시간표 목록을 조회할 수 있다
+            val (user1, token1) = dataGenerator.generateUser()
+            repeat(10) {
+                dataGenerator.generateTimetable(user = user1)
+            }
+
+            val (user2, token2) = dataGenerator.generateUser()
+            repeat(5) {
+                dataGenerator.generateTimetable(user = user2)
+            }
+
+            val response =
+                mvc
+                    .perform(
+                        get("/api/v1/timetables")
+                        .header("Authorization", "Bearer $token1")
+                        .contentType(MediaType.APPLICATION_JSON),
+                    ).andExpect(status().`is`(200))
+                    .andReturn()
+                    .response
+                    .getContentAsString(Charsets.UTF_8)
+                    .let {
+                        mapper.readValue(it, object : TypeReference<ListTimetableResponse>() {})
+                    }
+            assert(response.size == 10)
+            assert(response.all { it.user.id == user1.id })
         }
 
         @Test

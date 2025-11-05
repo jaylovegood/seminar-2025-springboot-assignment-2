@@ -17,11 +17,11 @@ interface TimetableRepository : CrudRepository<Timetable, Long> {
             t.timetable_name AS timetable_name,
             t.year AS year,
             t.semester AS semester,
-            u.id AS user_id,
-            u.username AS user_username
+            u.id AS owner_id,
+            u.username AS owner_username
         FROM timetables t
         JOIN users u ON u.id = t.user_id
-        WHERE t.user_id = userId
+        WHERE t.user_id = :userId
         """,
     )
     fun findAllByUserId(
