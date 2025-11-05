@@ -7,7 +7,6 @@ import com.wafflestudio.spring2025.helper.DataGenerator
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
 import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
-import com.wafflestudio.spring2025.timetable.model.Timetable
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,10 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -76,8 +75,8 @@ class TimetableIntegrationTest
                 mvc
                     .perform(
                         get("/api/v1/timetables")
-                        .header("Authorization", "Bearer $token1")
-                        .contentType(MediaType.APPLICATION_JSON),
+                            .header("Authorization", "Bearer $token1")
+                            .contentType(MediaType.APPLICATION_JSON),
                     ).andExpect(status().`is`(200))
                     .andReturn()
                     .response
@@ -104,9 +103,9 @@ class TimetableIntegrationTest
             mvc
                 .perform(
                     patch("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request))
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)),
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(timetable.id!!))
                 .andExpect(jsonPath("$.user.id").value(user.id!!))
@@ -140,7 +139,7 @@ class TimetableIntegrationTest
             mvc
                 .perform(
                     delete("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $token"),
+                        .header("Authorization", "Bearer $token"),
                 ).andExpect(status().isNoContent)
 
             mvc
