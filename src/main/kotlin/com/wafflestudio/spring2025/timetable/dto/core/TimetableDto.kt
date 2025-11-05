@@ -5,13 +5,15 @@ import com.wafflestudio.spring2025.timetable.model.Timetable
 import com.wafflestudio.spring2025.timetable.model.TimetableWithUser
 import com.wafflestudio.spring2025.user.dto.core.UserDto
 import com.wafflestudio.spring2025.user.model.User
+import io.swagger.v3.oas.annotations.media.Schema
 
+@Schema(description = "시간표")
 data class TimetableDto(
-    val id: Long?,
-    val user: UserDto,
-    val timetableName: String,
-    val year: Int,
-    val semester: Semester,
+    @Schema(description = "시간표 ID") val id: Long?,
+    @Schema(description = "시간표 소유자") val user: UserDto,
+    @Schema(description = "시간표 이름") val timetableName: String,
+    @Schema(description = "연도") val year: Int,
+    @Schema(description = "학기") val semester: Semester,
 ) {
     constructor(timetableWithUser: TimetableWithUser) : this(
         id = timetableWithUser.id,
