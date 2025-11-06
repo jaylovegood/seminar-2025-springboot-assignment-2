@@ -10,11 +10,18 @@ interface LectureRepository: CrudRepository<Lecture, Long> {
     @Query("""
         SELECT *
         FROM lectures
-        WHERE title LIKE '%' || :keyword || '%'
-        OR subtitle LIKE '%' || :keyword || '%'
-        OR lecturer LIKE '%' || :keyword || '%'
+        WHERE (title LIKE CONCAT('%', :keyword, '%')
+        OR subtitle LIKE CONCAT('%', :keyword, '%')
+        OR lecturer LIKE CONCAT('%', :keyword, '%'))
+        AND ((:nextId IS NULL) OR (id > :nextId))
+        ORDER BY id
+        LIMIT :limit
     """)
-    fun getByKeyword(@Param("keyword") keyword: String): List<Lecture>
+    fun getByKeywordWithCursor(
+        @Param("keyword") keyword: String,
+        @Param("nextId") nextId: Long?,
+        @Param("limit") limit: Int,
+    ): List<Lecture>
 
     @Query("""
         SELECT day_of_week, start_time, end_time, location
