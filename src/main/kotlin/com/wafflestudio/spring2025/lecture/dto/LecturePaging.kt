@@ -1,4 +1,6 @@
 package com.wafflestudio.spring2025.lecture.dto
 
-class LecturePaging {
-}
+data class LecturePaging(
+    val nextId: Long?,
+    val hasNext: Boolean,
+)
