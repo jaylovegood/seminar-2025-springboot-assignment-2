@@ -14,7 +14,7 @@ interface LectureRepository: CrudRepository<Lecture, Long> {
         WHERE (title LIKE CONCAT('%', :keyword, '%')
         OR subtitle LIKE CONCAT('%', :keyword, '%')
         OR lecturer LIKE CONCAT('%', :keyword, '%'))
-        AND ((:nextId IS NULL) OR (id > :nextId))
+        AND ((:nextId IS NULL) OR (id >= :nextId))
         ORDER BY id
         LIMIT :limit
     """)
@@ -34,7 +34,7 @@ interface LectureRepository: CrudRepository<Lecture, Long> {
     @Query("""
         SELECT *
         FROM lecture_time_place
-        WHERE lecture_id IN :lectureIds
+        WHERE lecture_id IN (:lectureIds)
     """)
     fun getSchedulesByLectureIds(@Param("lectureIds") lectureIds: List<Long>): List<LectureTimePlace>
 }
