@@ -4,10 +4,13 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
+import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
+import com.wafflestudio.spring2025.post.dto.PostPagingResponse
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
 import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -163,8 +166,42 @@ class TimetableIntegrationTest
         }
 
         @Test
-        fun `should search for courses`() {
+        fun `should search for courses based on keyword with pagination`() {
             // 강의를 검색할 수 있다
+            repeat(500){
+                dataGenerator.generateLecture()
+            }
+
+            val response =
+                mvc
+                    .perform(
+                        get("/api/v1/lectures?keyword=title-3&limit=5")
+                            .contentType(MediaType.APPLICATION_JSON)
+                    ).andExpect(status().isOk)
+                    .andExpect(jsonPath("$.paging.hasNext").value(true))
+                    .andReturn()
+                    .response
+                    .getContentAsString(Charsets.UTF_8)
+                    .let {
+                        mapper.readValue(it, LecturePagingResponse::class.java)
+                    }
+            assertKeywordIsInLectures("title-3", response.data)
+
+            val nextResponse =
+                mvc
+                    .perform(
+                        get("/api/v1/lectures?keyword=title-3&nextId=${response.paging.nextId}&limit=5")
+                            .contentType(MediaType.APPLICATION_JSON)
+                    ).andExpect(status().isOk)
+                    .andReturn()
+                    .response
+                    .getContentAsString(Charsets.UTF_8)
+                    .let {
+                        mapper.readValue(it, LecturePagingResponse::class.java)
+                    }
+            assertKeywordIsInLectures("title-3", nextResponse.data)
+            assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
+            assertTrue(nextResponse.data.map { it.id }.min() == response.paging.nextId)
         }
 
         @Test
@@ -206,5 +243,18 @@ class TimetableIntegrationTest
         @Test
         fun `should paginate correctly when searching for courses`() {
             // 강의 검색 시, 페이지네이션이 올바르게 동작한다
+        }
+
+        private fun assertKeywordIsInLectures(
+            keyword: String,
+            lectures: List<LectureDto>
+        ){
+            lectures.forEach {
+                assertTrue(
+                    it.title.contains(keyword)
+                    .or(it.subtitle.contains(keyword))
+                    .or(it.lecturer.contains(keyword))
+                )
+            }
         }
     }
