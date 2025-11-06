@@ -171,12 +171,14 @@ class TimetableIntegrationTest
             repeat(500){
                 dataGenerator.generateLecture()
             }
+            val (_, token) = dataGenerator.generateUser()
 
             val response =
                 mvc
                     .perform(
                         get("/api/v1/lectures?keyword=title-3&limit=5")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer $token")
                     ).andExpect(status().isOk)
                     .andExpect(jsonPath("$.paging.hasNext").value(true))
                     .andReturn()
@@ -192,6 +194,7 @@ class TimetableIntegrationTest
                     .perform(
                         get("/api/v1/lectures?keyword=title-3&nextId=${response.paging.nextId}&limit=5")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer $token")
                     ).andExpect(status().isOk)
                     .andReturn()
                     .response
