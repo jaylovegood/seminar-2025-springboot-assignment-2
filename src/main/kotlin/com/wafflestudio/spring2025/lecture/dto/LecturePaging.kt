@@ -1,0 +1,4 @@
+package com.wafflestudio.spring2025.lecture.dto
+
+class LecturePaging {
+}

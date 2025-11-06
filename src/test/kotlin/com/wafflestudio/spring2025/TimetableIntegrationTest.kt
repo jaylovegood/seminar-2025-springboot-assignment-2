@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
+import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
 import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
-import com.wafflestudio.spring2025.post.dto.PostPagingResponse
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
 import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
@@ -167,7 +167,7 @@ class TimetableIntegrationTest
 
         @Test
         fun `should search for courses based on keyword with pagination`() {
-            // 강의를 검색할 수 있다
+            // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
             repeat(500){
                 dataGenerator.generateLecture()
             }
@@ -201,7 +201,7 @@ class TimetableIntegrationTest
                     }
             assertKeywordIsInLectures("title-3", nextResponse.data)
             assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
-            assertTrue(nextResponse.data.map { it.id }.min() == response.paging.nextId)
+            assertTrue(nextResponse.data.minOf { it.id } == response.paging.nextId)
         }
 
         @Test
@@ -238,11 +238,6 @@ class TimetableIntegrationTest
         @Test
         fun `should return correct course list and total credits when retrieving timetable details`() {
             // 시간표 상세 조회 시, 강의 정보 목록과 총 학점이 올바르게 반환된다
-        }
-
-        @Test
-        fun `should paginate correctly when searching for courses`() {
-            // 강의 검색 시, 페이지네이션이 올바르게 동작한다
         }
 
         private fun assertKeywordIsInLectures(
