@@ -5,7 +5,9 @@ import com.wafflestudio.spring2025.lecture.dto.LecturePaging
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
 import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
 import com.wafflestudio.spring2025.lecture.repository.LectureRepository
+import org.springframework.stereotype.Service
 
+@Service
 class LectureService(
     private val lectureRepository: LectureRepository
 ) {
