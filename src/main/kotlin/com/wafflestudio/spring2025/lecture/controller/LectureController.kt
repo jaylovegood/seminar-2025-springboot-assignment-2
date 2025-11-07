@@ -35,11 +35,12 @@ class LectureController(
         @Parameter(description = "페이지당 강의 개수 (기본값: 20)")
         @RequestParam(defaultValue = "20") limit: Int,
     ): ResponseEntity<LecturePagingResponse> {
-        val result = lectureService.pageByKeyword(
-            keyword = keyword,
-            nextId = nextId,
-            limit = limit,
-        )
+        val result =
+            lectureService.pageByKeyword(
+                keyword = keyword,
+                nextId = nextId,
+                limit = limit,
+            )
         return ResponseEntity.ok(result)
     }
 }

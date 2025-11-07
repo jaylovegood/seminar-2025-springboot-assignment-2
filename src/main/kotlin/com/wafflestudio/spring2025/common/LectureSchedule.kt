@@ -13,7 +13,6 @@ data class LectureSchedule(
     // LocalTime.parse() 로 파싱 (기본 포맷 HH:MM)
     // XLS 시간 포맷 따라서 ex. val formatter = DateTimeFormatter.ofPattern("H시 m분") 로 포맷 설정
     @Schema(description = "강의실") val location: String,
-
 )
 
 @Schema(

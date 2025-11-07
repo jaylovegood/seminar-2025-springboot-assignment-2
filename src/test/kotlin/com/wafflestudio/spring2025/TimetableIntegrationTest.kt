@@ -168,7 +168,7 @@ class TimetableIntegrationTest
         @Test
         fun `should search for courses based on keyword with pagination`() {
             // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
-            repeat(500){
+            repeat(500) {
                 dataGenerator.generateLecture()
             }
             val (_, token) = dataGenerator.generateUser()
@@ -178,7 +178,7 @@ class TimetableIntegrationTest
                     .perform(
                         get("/api/v1/lectures?keyword=title-3&limit=5")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $token"),
                     ).andExpect(status().isOk)
                     .andExpect(jsonPath("$.paging.hasNext").value(true))
                     .andReturn()
@@ -194,7 +194,7 @@ class TimetableIntegrationTest
                     .perform(
                         get("/api/v1/lectures?keyword=title-3&nextId=${response.paging.nextId}&limit=5")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $token"),
                     ).andExpect(status().isOk)
                     .andReturn()
                     .response
@@ -245,13 +245,14 @@ class TimetableIntegrationTest
 
         private fun assertKeywordIsInLectures(
             keyword: String,
-            lectures: List<LectureDto>
-        ){
+            lectures: List<LectureDto>,
+        ) {
             lectures.forEach {
                 assertTrue(
-                    it.title.contains(keyword)
-                    .or(it.subtitle.contains(keyword))
-                    .or(it.lecturer.contains(keyword))
+                    it.title
+                        .contains(keyword)
+                        .or(it.subtitle.contains(keyword))
+                        .or(it.lecturer.contains(keyword)),
                 )
             }
         }
