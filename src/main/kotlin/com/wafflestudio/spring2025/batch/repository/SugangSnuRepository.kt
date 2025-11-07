@@ -12,11 +12,14 @@ import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.client.createExceptionAndAwait
 
-interface SugangSnuRepository : CrudRepository<Lecture, Long>, SugangSnuClientRepository {
-}
+interface SugangSnuRepository : CrudRepository<Lecture, Long>, SugangSnuClientRepository
 
 interface SugangSnuClientRepository {
-
+    suspend fun getSugangSnuLecturesDataBuffer(
+        year: Int,
+        semester: Semester,
+        language: String = "ko",
+    ): PooledDataBuffer
 }
 
 
@@ -28,12 +31,12 @@ class SugangSnuClientRepositoryImpl(
 ) : SugangSnuClientRepository {
 
     companion object {
-        const val SUGANG_SNU_COURSEBOOK_PATH = "/sugang/cc/cc100ajax.action"
-        const val DEFAULT_COURSEBOOK_PARAMS = "openUpDeptCd=&openDeptCd="
-        const val SUGANG_SNU_SEARCH_PATH = "/sugang/cc/cc100InterfaceSrch.action"
-        const val DEFAULT_SEARCH_PAGE_PARAMS = "workType=S&sortKey=&sortOrder="
-        const val SUGANG_SNU_SEARCH_POPUP_PATH = "/sugang/cc/cc101ajax.action"
-        const val DEFAULT_SEARCH_POPUP_PARAMS = """t_profPersNo=&workType=+&sbjtSubhCd=000"""
+//        const val SUGANG_SNU_COURSEBOOK_PATH = "/sugang/cc/cc100ajax.action"
+//        const val DEFAULT_COURSEBOOK_PARAMS = "openUpDeptCd=&openDeptCd="
+//        const val SUGANG_SNU_SEARCH_PATH = "/sugang/cc/cc100InterfaceSrch.action"
+//        const val DEFAULT_SEARCH_PAGE_PARAMS = "workType=S&sortKey=&sortOrder="
+//        const val SUGANG_SNU_SEARCH_POPUP_PATH = "/sugang/cc/cc101ajax.action"
+//        const val DEFAULT_SEARCH_POPUP_PARAMS = """t_profPersNo=&workType=+&sbjtSubhCd=000"""
         const val SUGANG_SNU_LECTURE_EXCEL_DOWNLOAD_PATH = "/sugang/cc/cc100InterfaceExcel.action"
         val DEFAULT_LECTURE_EXCEL_DOWNLOAD_PARAMS =
             """
@@ -53,9 +56,10 @@ class SugangSnuClientRepositoryImpl(
             """.trimIndent().replace("\n", "")
     }
 
-    suspend fun getSugangSnuLecturesDataBuffer(
+    override suspend fun getSugangSnuLecturesDataBuffer(
         year: Int,
         semester: Semester,
+        language: String,
     ): PooledDataBuffer =
         sugangSnuClient
             .get()
@@ -63,7 +67,7 @@ class SugangSnuClientRepositoryImpl(
                 builder.run {
                     path(SUGANG_SNU_LECTURE_EXCEL_DOWNLOAD_PATH)
                     query(DEFAULT_LECTURE_EXCEL_DOWNLOAD_PARAMS)
-                    // queryParam("srchLanguage", language)
+                    queryParam("srchLanguage", language)
                     queryParam("srchOpenSchyy", year)
                     queryParam("srchOpenShtm", semesterToSugangSnuSearchString (semester))
                     build()
