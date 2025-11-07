@@ -6,6 +6,7 @@ import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
 import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
+import com.wafflestudio.spring2025.lecture.model.LectureTimePlace
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
 import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
@@ -93,7 +94,21 @@ class TimetableIntegrationTest
 
         @Test
         fun `should retrieve timetable details`() {
-            // 시간표 상세 정보를 조회할 수 있다
+            //시간표를 조회할 수 있다.
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+            val timetableId = timetable.id!!
+
+            // when & then
+            mvc.perform(
+                get("/api/v1/timetables/{timetableId}/timetableLectures", timetableId)
+                    .header("Authorization", "Bearer $token")
+                    .accept(MediaType.APPLICATION_JSON)
+            )
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$[0].timetableId").value(timetableId))
+                .andExpect(jsonPath("$[0].lecture").exists())
+                .andExpect(jsonPath("$[0].lecture.schedule").isArray)
         }
 
         @Test
@@ -207,27 +222,87 @@ class TimetableIntegrationTest
             assertTrue(nextResponse.data.minOf { it.id } > response.paging.nextId!!)
         }
 
-        @Test
-        fun `should add a course to timetable`() {
-            // 시간표에 강의를 추가할 수 있다
-        }
+    fun `should add a course to timetable (using DataGenerator only)`() {
+        // 시간표에 강의를 추가할 수 있다.
+        val (user, token) = dataGenerator.generateUser()
+        val timetable = dataGenerator.generateTimetable(user = user)
+        val lecture = dataGenerator.generateLecture()
 
-        @Test
-        fun `should return error when adding overlapping course to timetable`() {
-            // 시간표에 강의 추가 시, 시간이 겹치면 에러를 반환한다
-        }
+        mvc.perform(
+            patch("/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}", timetable.id!!, lecture.id!!)
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.timetableLecture.timetableId").value(timetable.id!!))
+            .andExpect(jsonPath("$.timetableLecture.lectureId").value(lecture.id!!))
+    }
+    @Test
+    fun `should return error when adding overlapping course to timetable`() {
+        // 겹치는 강의는 추가할 수 없다
+        val (user, token) = dataGenerator.generateUser()
+        val timetable = dataGenerator.generateTimetable(user = user)
 
-        @Test
-        fun `should not add a course to another user's timetable`() {
-            // 다른 사람의 시간표에는 강의를 추가할 수 없다
-        }
+        // 강의 A (기존)
+        val lectureA = dataGenerator.generateLecture()
+        val schedulesA = dataGenerator.generateNonOverlappingSchedules() // 월 9:00~10:30 & 월 9:15~10:45
+        dataGenerator.insertTimetableLecture(timetable, lectureA, schedulesA)
 
-        @Test
-        fun `should remove a course from timetable`() {
-            // 시간표에서 강의를 삭제할 수 있다
-        }
+        // 강의 B (겹치는 시간으로)
+        val lectureB = dataGenerator.generateLecture()
+        val schedulesB = listOf(
+            dataGenerator.generateOverlappingWith(schedulesA)
+        )
 
-        @Test
+        // when & then
+        mvc.perform(
+            post("/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}", timetable.id, lectureB.id)
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("시간표에 기존 강의와 시간이 겹칩니다."))
+    }
+
+
+    @Test
+    fun `should not add a course to another user's timetable`() {
+        // given
+        val (owner, _) = dataGenerator.generateUser() // 시간표의 주인
+        val (attacker, token) = dataGenerator.generateUser() // 다른 사용자
+        val timetable = dataGenerator.generateTimetable(user = owner) // owner 소유의 시간표
+        val lecture = dataGenerator.generateLecture()
+
+        // when & then
+        mvc.perform(
+            post("/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}", timetable.id, lecture.id)
+                .header("Authorization", "Bearer $token") // attacker의 토큰으로 요청
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.message").value("권한이 없습니다."))
+    }
+
+
+    @Test
+    fun `should remove a course from timetable`() {
+        // given
+        val (user, token) = dataGenerator.generateUser()
+        val timetable = dataGenerator.generateTimetable(user = user)
+        val lecture = dataGenerator.generateLecture()
+        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture) // timetable_lecture 관계 추가
+
+        // when & then
+        mvc.perform(
+            delete("/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}", timetable.id, timetableLecture.id)
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNoContent)
+    }
+
+
+    @Test
         fun `should not remove a course from another user's timetable`() {
             // 다른 사람의 시간표에서는 강의를 삭제할 수 없다
         }

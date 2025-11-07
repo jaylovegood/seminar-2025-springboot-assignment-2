@@ -3,6 +3,7 @@ package com.wafflestudio.spring2025.timetableLecture.controller
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableResponse
 import com.wafflestudio.spring2025.timetableLecture.dto.CreateTimetableLectureResponse
+import com.wafflestudio.spring2025.timetableLecture.dto.GetTimetableLectureResponse
 import com.wafflestudio.spring2025.timetableLecture.dto.ListTimetableLectureResponse
 import com.wafflestudio.spring2025.timetableLecture.dto.core.TimetableLectureDto
 import com.wafflestudio.spring2025.timetableLecture.repository.TimetableLectureRepository
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 import javax.swing.text.html.parser.Entity
 
 @RestController
-@RequestMapping("/timetables/{timetableId}/timetableLectures")
+@RequestMapping("/api/v1/timetables/{timetableId}/timetableLectures")
 class TimetableLectureController(
     private val timetableLectureRepository: TimetableLectureRepository,
     private val timetableLectureService: TimetableLectureService
@@ -29,8 +30,9 @@ class TimetableLectureController(
     fun update(
         @PathVariable timetableId: Long,
         @PathVariable lectureId: Long,
+        @LoggedInUser user: User,
     ): ResponseEntity<CreateTimetableLectureResponse> {
-        val tldto = timetableLectureService.create(lectureId, timetableId)
+        val tldto = timetableLectureService.create(lectureId, timetableId,user)
         return ResponseEntity.ok(tldto)
     }
     @DeleteMapping("/{timetableLectureId}")
@@ -46,6 +48,10 @@ class TimetableLectureController(
         @PathVariable timetableId: Long,
     ): ResponseEntity<ListTimetableLectureResponse> {
         return ResponseEntity.ok(timetableLectureService.get(timetableId))
+    }
+    @GetMapping("/{timetableLectureId}")
+    fun detail(@PathVariable timetableLectureId: Long,):ResponseEntity<GetTimetableLectureResponse>{
+        return ResponseEntity.ok(timetableLectureService.detail(timetableLectureId))
     }
 
 }

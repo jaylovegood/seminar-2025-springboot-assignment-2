@@ -47,4 +47,9 @@ class ForbiddenException : TimetableLectureException(
     httpStatusCode = HttpStatus.FORBIDDEN,
     msg = "현재 사용자에게 해당 시간표를 수정하거나 삭제할 권한이 없습니다.",
 )
+class TimeConflictException : TimetableLectureException(
+    errorCode = 2401,
+    httpStatusCode = HttpStatus.BAD_REQUEST,
+    msg = "다른 강의와 시간이 겹칩니다.",
+)
 

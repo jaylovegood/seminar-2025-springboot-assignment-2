@@ -4,6 +4,8 @@ import com.wafflestudio.spring2025.board.model.Board
 import com.wafflestudio.spring2025.board.repository.BoardRepository
 import com.wafflestudio.spring2025.comment.model.Comment
 import com.wafflestudio.spring2025.comment.repository.CommentRepository
+import com.wafflestudio.spring2025.common.DayOfWeek
+import com.wafflestudio.spring2025.common.LectureSchedule
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.lecture.model.Lecture
 import com.wafflestudio.spring2025.lecture.repository.LectureRepository
@@ -11,11 +13,14 @@ import com.wafflestudio.spring2025.post.model.Post
 import com.wafflestudio.spring2025.post.repository.PostRepository
 import com.wafflestudio.spring2025.timetable.model.Timetable
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
+import com.wafflestudio.spring2025.timetableLecture.model.TimetableLecture
+import com.wafflestudio.spring2025.timetableLecture.repository.TimetableLectureRepository
 import com.wafflestudio.spring2025.user.JwtTokenProvider
 import com.wafflestudio.spring2025.user.model.User
 import com.wafflestudio.spring2025.user.repository.UserRepository
 import org.mindrot.jbcrypt.BCrypt
 import org.springframework.stereotype.Component
+import java.time.LocalTime
 import kotlin.random.Random
 
 @Component
@@ -27,7 +32,21 @@ class DataGenerator(
     private val timetableRepository: TimetableRepository,
     private val lectureRepository: LectureRepository,
     private val jwtTokenProvider: JwtTokenProvider,
+    private val timetableLectureRepository: TimetableLectureRepository,
 ) {
+    private val startCandidates = listOf(
+        LocalTime.of(9, 0),
+        LocalTime.of(10, 30),
+        LocalTime.of(13, 0),
+        LocalTime.of(15, 0),
+        LocalTime.of(16, 30),
+        LocalTime.of(18, 0),
+    )
+    private val durations = listOf(60L, 75L, 90L, 120L)
+
+    private fun overlap(aStart: LocalTime, aEnd: LocalTime, bStart: LocalTime, bEnd: LocalTime) =
+        aStart < bEnd && bStart < aEnd
+
     fun generateUser(
         username: String? = null,
         password: String? = null,
@@ -139,4 +158,90 @@ class DataGenerator(
             )
         return lecture
     }
+    fun generateNonOverlappingSchedules(
+        count: Int = 2,
+        day: DayOfWeek = DayOfWeek.MON,
+        durationMinutes: Long = 75L,
+    ): List<LectureSchedule> {
+        val schedules = mutableListOf<LectureSchedule>()
+        for (i in 0 until count) {
+            val start = startCandidates.firstOrNull { s ->
+                val end = s.plusMinutes(durationMinutes)
+                schedules.none { p -> overlap(p.startTime, p.endTime, s, end) }
+            } ?: LocalTime.of(20, 0)
+            schedules += LectureSchedule(
+                dayOfWeek = day,
+                startTime = start,
+                endTime = start.plusMinutes(durationMinutes),
+                location = "B-${Random.nextInt(10)} R-${Random.nextInt(300)}",
+            )
+        }
+        return schedules
+    }
+    fun generateOverlappingSchedules(
+        day: DayOfWeek = DayOfWeek.MON,
+        baseStart: LocalTime = LocalTime.of(9, 0),
+        baseDurationMinutes: Long = 90L,
+        shiftMinutes: Long = 15L,
+    ): List<LectureSchedule> {
+        val baseEnd = baseStart.plusMinutes(baseDurationMinutes)
+        val s1 = LectureSchedule(
+            dayOfWeek = day,
+            startTime = baseStart,
+            endTime = baseEnd,
+            location = "B-1 R-101",
+        )
+        val s2 = LectureSchedule(
+            dayOfWeek = day,
+            startTime = baseStart.plusMinutes(shiftMinutes),
+            endTime = baseEnd.plusMinutes(shiftMinutes),
+            location = "B-1 R-101",
+        )
+        return listOf(s1, s2)
+    }
+    fun generateNonOverlappingWith(
+        existing: List<LectureSchedule>,
+        preferDay: DayOfWeek = DayOfWeek.MON,
+        durationMinutes: Long = 75L,
+    ): LectureSchedule {
+        val start = startCandidates.firstOrNull { s ->
+            val e = s.plusMinutes(durationMinutes)
+            existing.none { ex ->
+                ex.dayOfWeek == preferDay && overlap(ex.startTime, ex.endTime, s, e)
+            }
+        } ?: LocalTime.of(20, 0)
+        return LectureSchedule(
+            dayOfWeek = preferDay,
+            startTime = start,
+            endTime = start.plusMinutes(durationMinutes),
+            location = "B-${Random.nextInt(10)} R-${Random.nextInt(300)}",
+        )
+    }
+
+    /** ✅ 기존 스케줄 리스트와 겹치게 새 스케줄 하나 생성 */
+    fun generateOverlappingWith(
+        existing: List<LectureSchedule>,
+        preferDay: DayOfWeek = DayOfWeek.MON,
+        shiftMinutes: Long = 15L,
+    ): LectureSchedule {
+        val base = existing.firstOrNull { it.dayOfWeek == preferDay } ?: existing.first()
+        return LectureSchedule(
+            dayOfWeek = base.dayOfWeek,
+            startTime = base.startTime.plusMinutes(shiftMinutes),
+            endTime = base.endTime.plusMinutes(shiftMinutes),
+            location = base.location,
+        )
+    }
+    fun insertTimetableLecture(timetable: Timetable, lecture: Lecture, schedules: List<LectureSchedule>) {
+        timetableLectureRepository.save(
+            TimetableLecture(
+                timetableId = timetable.id!!,
+                lectureId = lecture.id!!,
+            )
+        )
+        // schedules는 DB엔 안 넣어도 괜찮음 — 검증용 DTO에서만 사용
+    }
+
 }
+
+
