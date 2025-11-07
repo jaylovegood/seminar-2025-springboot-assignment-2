@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Embedded
 import org.springframework.data.relational.core.mapping.Table
 
 @Table("lecture_time_place")
-data class LectureTimePlace (
+data class LectureTimePlace(
     @Id var id: Long? = null,
     var lectureId: Long,
     @Embedded(prefix = "", onEmpty = Embedded.OnEmpty.USE_NULL)

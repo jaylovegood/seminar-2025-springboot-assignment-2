@@ -7,8 +7,9 @@ import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 
-interface LectureRepository: CrudRepository<Lecture, Long> {
-    @Query("""
+interface LectureRepository : CrudRepository<Lecture, Long> {
+    @Query(
+        """
         SELECT *
         FROM lectures
         WHERE (title LIKE CONCAT('%', :keyword, '%')
@@ -17,24 +18,33 @@ interface LectureRepository: CrudRepository<Lecture, Long> {
         AND ((:nextId IS NULL) OR (id > :nextId))
         ORDER BY id
         LIMIT :limit
-    """)
+    """,
+    )
     fun getByKeywordWithCursor(
         @Param("keyword") keyword: String,
         @Param("nextId") nextId: Long?,
         @Param("limit") limit: Int,
     ): List<Lecture>
 
-    @Query("""
+    @Query(
+        """
         SELECT day_of_week, start_time, end_time, location
         FROM lecture_time_place
         WHERE lecture_id = :id
-    """)
-    fun getScheduleById(@Param("id") id: Long): List<LectureSchedule>
+    """,
+    )
+    fun getScheduleById(
+        @Param("id") id: Long,
+    ): List<LectureSchedule>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
         FROM lecture_time_place
         WHERE lecture_id IN (:lectureIds)
-    """)
-    fun getSchedulesByLectureIds(@Param("lectureIds") lectureIds: List<Long>): List<LectureTimePlace>
+    """,
+    )
+    fun getSchedulesByLectureIds(
+        @Param("lectureIds") lectureIds: List<Long>,
+    ): List<LectureTimePlace>
 }
