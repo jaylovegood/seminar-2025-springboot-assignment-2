@@ -32,7 +32,8 @@ class TimetableLectureService(
             lectureId = lecture.id!!,
             timetableId = timetable.id!!,
         )
-        return TimetableLectureDto(timetable, timetableLecture,lecture)
+        val schedule = lectureRepository.getScheduleById(lectureId) ?: throw TimetableLectureTestException()
+        return TimetableLectureDto(timetable, timetableLecture,lecture,schedule)
     }
     fun delete(timetableLectureId: Long,user: User){
         val timetableLecture = timetableLectureRepository.findByIdOrNull(timetableLectureId) ?: throw TimetableLectureTestException()
