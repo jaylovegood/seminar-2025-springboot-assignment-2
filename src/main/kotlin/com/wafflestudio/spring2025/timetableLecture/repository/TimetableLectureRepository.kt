@@ -8,10 +8,13 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long>{
+interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long> {
     fun findByTimetableId(timetableId: Long): List<TimetableLecture>
 
-    fun existsByTimetableIdAndLectureId(timetableId: Long, lectureId: Long): Boolean
+    fun existsByTimetableIdAndLectureId(
+        timetableId: Long,
+        lectureId: Long,
+    ): Boolean
 
     @Query(
         """
@@ -36,11 +39,12 @@ interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long>{
         FROM timetable_lecture tl
         JOIN lecture l ON tl.lecture_id = l.id
         WHERE tl.timetable_id = :timetableId
-        """
+        """,
     )
-
     fun findAllByTimetableIdWithLecture(timetableId: Long): List<TimetableLectureWithLecture>
-    @Query("""
+
+    @Query(
+        """
     SELECT COUNT(*) > 0
     FROM timetableLectures tl
     JOIN lecture_time_place ltp_existing ON ltp_existing.lecture_id = tl.lecture_id
@@ -51,11 +55,10 @@ interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long>{
             (ltp_existing.start_time < ltp_new.end_time)
         AND (ltp_new.start_time < ltp_existing.end_time)
       )
-""")
+""",
+    )
     fun hasTimeConflict(
         @Param("timetableId") timetableId: Long,
         @Param("lectureId") lectureId: Long,
     ): Boolean
-
-
 }

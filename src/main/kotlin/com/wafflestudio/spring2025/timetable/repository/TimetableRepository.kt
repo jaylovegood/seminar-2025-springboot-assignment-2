@@ -27,5 +27,4 @@ interface TimetableRepository : CrudRepository<Timetable, Long> {
     fun findAllByUserId(
         @Param("userId") userId: Long,
     ): List<TimetableWithUser>
-
 }
