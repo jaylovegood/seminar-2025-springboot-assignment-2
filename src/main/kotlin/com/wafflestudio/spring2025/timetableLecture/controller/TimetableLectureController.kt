@@ -3,6 +3,7 @@ package com.wafflestudio.spring2025.timetableLecture.controller
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableResponse
 import com.wafflestudio.spring2025.timetableLecture.dto.CreateTimetableLectureResponse
+import com.wafflestudio.spring2025.timetableLecture.dto.ListTimetableLectureResponse
 import com.wafflestudio.spring2025.timetableLecture.dto.core.TimetableLectureDto
 import com.wafflestudio.spring2025.timetableLecture.repository.TimetableLectureRepository
 import com.wafflestudio.spring2025.timetableLecture.service.TimetableLectureService
@@ -10,6 +11,7 @@ import com.wafflestudio.spring2025.user.LoggedInUser
 import com.wafflestudio.spring2025.user.model.User
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
@@ -38,6 +40,12 @@ class TimetableLectureController(
     ): ResponseEntity<Unit>{
         timetableLectureService.delete(timetableLectureId, user)
         return ResponseEntity.noContent().build()
+    }
+    @GetMapping()
+    fun get(
+        @PathVariable timetableId: Long,
+    ): ResponseEntity<ListTimetableLectureResponse> {
+        return ResponseEntity.ok(timetableLectureService.get(timetableId))
     }
 
 }
