@@ -232,7 +232,7 @@ class DataGenerator(
             location = base.location,
         )
     }
-    fun insertTimetableLecture(timetable: Timetable, lecture: Lecture, schedules: List<LectureSchedule>) {
+    fun insertTimetableLecture(timetable: Timetable, lecture: Lecture) {
         timetableLectureRepository.save(
             TimetableLecture(
                 timetableId = timetable.id!!,

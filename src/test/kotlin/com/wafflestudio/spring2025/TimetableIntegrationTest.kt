@@ -247,8 +247,7 @@ class TimetableIntegrationTest
         // 강의 A (기존)
         val lectureA = dataGenerator.generateLecture()
         val schedulesA = dataGenerator.generateNonOverlappingSchedules() // 월 9:00~10:30 & 월 9:15~10:45
-        dataGenerator.insertTimetableLecture(timetable, lectureA, schedulesA)
-
+        dataGenerator.insertTimetableLecture(timetable, lectureA)
         // 강의 B (겹치는 시간으로)
         val lectureB = dataGenerator.generateLecture()
         val schedulesB = listOf(
@@ -304,11 +303,26 @@ class TimetableIntegrationTest
 
 
     @Test
-        fun `should not remove a course from another user's timetable`() {
-            // 다른 사람의 시간표에서는 강의를 삭제할 수 없다
-        }
+    fun `should not remove a course from another user's timetable`() {
+        // given
+        val (owner, _) = dataGenerator.generateUser() // 시간표 주인
+        val (attacker, token) = dataGenerator.generateUser() // 다른 사용자
+        val timetable = dataGenerator.generateTimetable(user = owner)
+        val lecture = dataGenerator.generateLecture()
+        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture)
 
-        //        @Disabled("곧 안내드리겠습니다")
+        // when & then
+        mvc.perform(
+            delete("/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}", timetable.id, timetableLecture.id)
+                .header("Authorization", "Bearer $token") // 공격자 토큰
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.message").value("권한이 없습니다."))
+    }
+
+
+    //        @Disabled("곧 안내드리겠습니다")
         @Test
         fun `should fetch and save course information from SNU course registration site`() {
             // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
@@ -333,12 +347,36 @@ class TimetableIntegrationTest
                 .andExpect(jsonPath("$.paging.hasNext").value(true))
         }
 
-        @Test
-        fun `should return correct course list and total credits when retrieving timetable details`() {
-            // 시간표 상세 조회 시, 강의 정보 목록과 총 학점이 올바르게 반환된다
-        }
+    @Test
+    fun `should return correct course list and total credits when retrieving timetable details`() {
+        // given
+        val (user, token) = dataGenerator.generateUser()
+        val timetable = dataGenerator.generateTimetable(user = user)
 
-        private fun assertKeywordIsInLectures(
+        val lecture1 = dataGenerator.generateLecture(credit = 3, title = "데이터베이스")
+        val lecture2 = dataGenerator.generateLecture(credit = 2, title = "운영체제")
+
+        val tl1 = dataGenerator.insertTimetableLecture(timetable, lecture1)
+        val tl2 = dataGenerator.insertTimetableLecture(timetable, lecture2)
+
+        val expectedTotalCredit = lecture1.credit + lecture2.credit
+
+        // when & then
+        mvc.perform(
+            get("/api/v1/timetables/{timetableId}/timetableLectures", timetable.id)
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk)
+            // 응답 구조 내 강의 목록 확인
+            .andExpect(jsonPath("$.lectures[0].title").value("데이터베이스"))
+            .andExpect(jsonPath("$.lectures[1].title").value("운영체제"))
+            // 총 학점 확인
+            .andExpect(jsonPath("$.totalCredit").value(expectedTotalCredit))
+    }
+
+
+    private fun assertKeywordIsInLectures(
             keyword: String,
             lectures: List<LectureDto>,
         ) {
