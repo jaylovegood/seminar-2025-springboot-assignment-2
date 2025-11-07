@@ -204,7 +204,7 @@ class TimetableIntegrationTest
                     }
             assertKeywordIsInLectures("title-3", nextResponse.data)
             assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
-            assertTrue(nextResponse.data.minOf { it.id } == response.paging.nextId)
+            assertTrue(nextResponse.data.minOf { it.id } > response.paging.nextId!!)
         }
 
         @Test
