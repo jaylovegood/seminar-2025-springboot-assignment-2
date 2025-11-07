@@ -9,6 +9,7 @@ import com.wafflestudio.spring2025.common.LectureSchedule
 import com.wafflestudio.spring2025.lecture.model.Lecture
 import com.wafflestudio.spring2025.lecture.model.LectureTimePlace
 import com.wafflestudio.spring2025.lecture.repository.LectureRepository
+import com.wafflestudio.spring2025.lecture.repository.LectureTimePlaceRepository
 import org.springframework.stereotype.Service
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 
@@ -16,6 +17,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook
 class SugangSnuService (
     private val sugangSnuRepository: SugangSnuRepository,
     private val lectureRepository: LectureRepository,
+    private val lectureTimePlaceRepository: LectureTimePlaceRepository,
 ) {
 
     suspend fun getAndSaveSugangSnuLectures(
@@ -48,16 +50,17 @@ class SugangSnuService (
                 lectureXlsx.release()
             }
     }
-    private suspend fun saveSugangSnuLectures(
+
+    private fun saveSugangSnuLectures(
         sugangSnuLectures: List<SugangSnuLecture>
     ){
         val lectureIds: List<Long> = sugangSnuLectures
             .map { sugangSnuLectureToLectureModel(it) }
             .let { lectureRepository.saveAll(it) }
-            .map { it.id!! }.toList()
+            .map { it.id!! }
 
         val lectureSchedules: List<List<LectureSchedule>> = sugangSnuLectures
-            .map { it.schedule }.toList()
+            .map { it.schedule }
 
         lectureIds
             .zip(lectureSchedules)
@@ -68,12 +71,10 @@ class SugangSnuService (
                         id = null,
                         schedule = it,
                     )
-                }.toList()
+                }
             }
-            .toList()
             .flatten()
-            .let { TODO() }
-
+            .let { lectureTimePlaceRepository.saveAll(it) }
     }
 
 }
