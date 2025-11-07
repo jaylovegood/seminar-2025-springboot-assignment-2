@@ -13,6 +13,7 @@ import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.matchers.JUnitMatchers.containsString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -311,6 +312,26 @@ class TimetableIntegrationTest
         @Test
         fun `should fetch and save course information from SNU course registration site`() {
             // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
+            val (_, token) = dataGenerator.generateUser()
+
+            mvc
+                .perform(
+                    post("/api/v1/admin/batch/sugang-snu")
+                        .param("year", "2025")
+                        .param("semester", "SUMMER")
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().`is`(200))
+
+            Thread.sleep(10000)
+
+            mvc
+                .perform(
+                    get("/api/v1/lectures?keyword=수학&limit=5")
+                        .header("Authorization", "Bearer $token")
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.paging.hasNext").value(true))
+
         }
 
         @Test
