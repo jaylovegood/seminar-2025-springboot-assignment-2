@@ -285,22 +285,22 @@ class TimetableIntegrationTest
     }
 
 
-//    @Test
-//    fun `should remove a course from timetable`() {
-//        // given
-//        val (user, token) = dataGenerator.generateUser()
-//        val timetable = dataGenerator.generateTimetable(user = user)
-//        val lecture = dataGenerator.generateLecture()
-//        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture) // timetable_lecture 관계 추가
-//
-//        // when & then
-//        mvc.perform(
-//            delete("/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}", timetable.id, timetableLecture.id)
-//                .header("Authorization", "Bearer $token")
-//                .contentType(MediaType.APPLICATION_JSON)
-//        )
-//            .andExpect(status().isNoContent)
-//    }
+    @Test
+    fun `should remove a course from timetable`() {
+        // given
+        val (user, token) = dataGenerator.generateUser()
+        val timetable = dataGenerator.generateTimetable(user = user)
+        val lecture = dataGenerator.generateLecture()
+        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture) // timetable_lecture 관계 추가
+
+        // when & then
+        mvc.perform(
+            delete("/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}", timetable.id, timetableLecture.id)
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNoContent)
+    }
 
 
     @Test
