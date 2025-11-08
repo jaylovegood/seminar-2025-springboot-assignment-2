@@ -4,11 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
+import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
+import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
 import com.wafflestudio.spring2025.lecture.repository.LectureTimePlaceRepository
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
 import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
+import org.junit.jupiter.api.Assertions.assertTrue
 import com.wafflestudio.spring2025.timetableLecture.dto.CreateTimetableLectureRequest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -247,16 +250,16 @@ class TimetableIntegrationTest
         // 강의 A (기존)
         val lectureA = dataGenerator.generateLecture()
         dataGenerator.insertTimetableLecture(timetable, lectureA)
+        val ltp = dataGenerator.generateLectureTimePlace(lectureA.id!!)
         // 강의 B (겹치는 시간으로)
         val lectureB = dataGenerator.generateLecture()
-        val ltp = dataGenerator.generateLectureTimePlace(lectureA.id!!)
         dataGenerator.generateLectureTimePlacefix(lectureB.id!!, ltp.schedule)
         val request = CreateTimetableLectureRequest(timetable.id!!, lectureB.id!!)
         // when & then
         mvc
             .perform(
                 post(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{LectureId}",
+                    "/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}",
                     timetable.id,
                     lectureB.id
                 )
@@ -393,19 +396,16 @@ class TimetableIntegrationTest
             // LectureDto가 정상적으로 내려오는지만 확인
             .andExpect(jsonPath("$.title").value("데이터베이스"))
     }
-
-
     private fun assertKeywordIsInLectures(
-            keyword: String,
-            lectures: List<LectureDto>,
-        ) {
-            lectures.forEach {
-                assertTrue(
-                    it.title
-                        .contains(keyword)
-                        .or(it.subtitle.contains(keyword))
-                        .or(it.lecturer.contains(keyword)),
-                )
-            }
+        keyword: String,
+        lectures: List<LectureDto>
+    ){
+        lectures.forEach {
+            assertTrue(
+                it.title.contains(keyword)
+                    .or(it.subtitle.contains(keyword))
+                    .or(it.lecturer.contains(keyword))
+            )
         }
+    }
     }

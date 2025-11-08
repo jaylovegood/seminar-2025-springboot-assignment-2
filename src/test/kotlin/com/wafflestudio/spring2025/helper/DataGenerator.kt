@@ -187,12 +187,11 @@ class DataGenerator(
             location = location,
         )
 
-        // LectureTimePlace 엔티티 생성
-        return LectureTimePlace(
+        return lecturetimeplaceRepository.save(LectureTimePlace(
             id = null,
             lectureId = lectureId,
             schedule = schedule,
-        )
+        ))
     }
     fun generateLectureTimePlacefix(lectureId: Long, schedule: LectureSchedule): LectureTimePlace {
         return lecturetimeplaceRepository.save(LectureTimePlace(

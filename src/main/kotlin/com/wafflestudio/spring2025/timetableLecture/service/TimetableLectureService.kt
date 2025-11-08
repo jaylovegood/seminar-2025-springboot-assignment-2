@@ -45,15 +45,17 @@ class TimetableLectureService(
             throw AlreadyExistsException()
         }
 
+        if (timetableLectureRepository.hasTimeConflict(timetableId, lectureId)) {
+            throw TimeConflictException()
+        }
+
         val timetableLecture =
             TimetableLecture(
                 lectureId = lecture.id!!,
                 timetableId = timetable.id!!,
             )
-        if (timetableLectureRepository.hasTimeConflict(timetableId, lectureId)) {
-            throw TimeConflictException()
-        }
         val saved = timetableLectureRepository.save(timetableLecture)
+
 
         val schedule = lectureRepository.getScheduleById(lectureId)
 
@@ -67,7 +69,6 @@ class TimetableLectureService(
         val timetableLecture = timetableLectureRepository.findByIdOrNull(timetableLectureId) ?: throw TimetableLectureNotFoundException()
         val timetable = timetableRepository.findByIdOrNull(timetableLecture.timetableId) ?: throw TimetableNotFoundException()
         if (user.id != timetable.userId) {
-            println("1111")
             throw ForbiddenException()
         }
         timetableLectureRepository.delete(timetableLecture)

@@ -36,8 +36,8 @@ interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long> {
             l.subtitle AS lecture_subtitle,
             l.credit AS lecture_credit,
             l.lecturer AS lecture_lecturer
-        FROM timetable_lecture tl
-        JOIN lecture l ON tl.lecture_id = l.id
+        FROM timetableLectures tl
+        JOIN lectures l ON tl.lecture_id = l.id
         WHERE tl.timetable_id = :timetableId
         """,
     )
@@ -45,20 +45,17 @@ interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long> {
 
     @Query(
         """
-    SELECT COUNT(*) > 0
+    SELECT (COUNT(*) > 0) AS conflict
     FROM timetableLectures tl
     JOIN lecture_time_place ltp_existing ON ltp_existing.lecture_id = tl.lecture_id
     JOIN lecture_time_place ltp_new ON ltp_new.lecture_id = :lectureId
     WHERE tl.timetable_id = :timetableId
       AND ltp_existing.day_of_week = ltp_new.day_of_week
       AND (
-            (ltp_existing.start_time < ltp_new.end_time)
-        AND (ltp_new.start_time < ltp_existing.end_time)
+            ltp_existing.start_time < ltp_new.end_time
+        AND ltp_new.start_time < ltp_existing.end_time
       )
-""",
+    """
     )
-    fun hasTimeConflict(
-        @Param("timetableId") timetableId: Long,
-        @Param("lectureId") lectureId: Long,
-    ): Boolean
+    fun hasTimeConflict(timetableId: Long, lectureId: Long): Boolean
 }
