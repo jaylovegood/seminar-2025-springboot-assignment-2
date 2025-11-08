@@ -149,7 +149,7 @@ class DataGenerator(
         val lecture =
             lectureRepository.save(
                 Lecture(
-                    academicYear = academicYear ?: Random.Default.nextInt(2020, 2025),
+                    academicYear = academicYear ?: Random.Default.nextInt(2025, 2026),
                     semester = semester ?: Semester.entries.random(),
                     lectureType = lectureType ?: arrayOf("전선", "전필", "교양", "교직", "논문").random(),
                     college = college ?: "college-${Random.Default.nextInt(10)}",

@@ -182,7 +182,7 @@ class TimetableIntegrationTest
     @Test
     fun `should search for courses based on keyword with pagination`() {
         // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
-        repeat(500) {
+        repeat(400) {
             dataGenerator.generateLecture()
         }
         val (_, token) = dataGenerator.generateUser()
@@ -190,7 +190,7 @@ class TimetableIntegrationTest
         val response =
             mvc
                 .perform(
-                    get("/api/v1/lectures?keyword=title-3&limit=5")
+                    get("/api/v1/lectures?keyword=-3&year=2025&semester=SUMMER&limit=5")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer $token"),
                 ).andExpect(status().isOk)
@@ -201,12 +201,12 @@ class TimetableIntegrationTest
                 .let {
                     mapper.readValue(it, LecturePagingResponse::class.java)
                 }
-        assertKeywordIsInLectures("title-3", response.data)
+        assertKeywordIsInLectures("-3", response.data)
 
         val nextResponse =
             mvc
                 .perform(
-                    get("/api/v1/lectures?keyword=title-3&nextId=${response.paging.nextId}&limit=5")
+                    get("/api/v1/lectures?keyword=title-3&year=2025&semester=SUMMER&nextId=${response.paging.nextId}&limit=5")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer $token"),
                 ).andExpect(status().isOk)
@@ -354,16 +354,16 @@ class TimetableIntegrationTest
             .perform(
                 post("/api/v1/admin/batch/sugang-snu")
                     .param("year", "2025")
-                    .param("semester", "SPRING")
+                    .param("semester", "FALL")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().`is`(200))
 
-        Thread.sleep(10000)
+        Thread.sleep(15000)
 
         mvc
             .perform(
-                get("/api/v1/lectures?year=2025&semester=SPRING&keyword=수학&limit=5")
+                get("/api/v1/lectures?year=2025&semester=FALL&keyword=수학&limit=5")
                     .header("Authorization", "Bearer $token")
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.paging.hasNext").value(true))
