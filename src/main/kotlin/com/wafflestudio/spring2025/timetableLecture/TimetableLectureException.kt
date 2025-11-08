@@ -61,7 +61,7 @@ class ForbiddenException :
 
 class TimeConflictException :
     TimetableLectureException(
-        errorCode = 2401,
+        errorCode = 0,
         httpStatusCode = HttpStatus.BAD_REQUEST,
         msg = "다른 강의와 시간이 겹칩니다.",
     )
