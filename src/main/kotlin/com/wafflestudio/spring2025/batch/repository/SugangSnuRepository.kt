@@ -12,7 +12,9 @@ import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.client.createExceptionAndAwait
 
-interface SugangSnuRepository : CrudRepository<Lecture, Long>, SugangSnuClientRepository
+interface SugangSnuRepository :
+    CrudRepository<Lecture, Long>,
+    SugangSnuClientRepository
 
 interface SugangSnuClientRepository {
     suspend fun getSugangSnuLecturesDataBuffer(
@@ -22,14 +24,9 @@ interface SugangSnuClientRepository {
     ): PooledDataBuffer
 }
 
-interface SugangSnuBatchRepository {
+interface SugangSnuBatchRepository
 
-}
-
-interface SugangSnuBatchScheduleRepository {
-
-}
-
+interface SugangSnuBatchScheduleRepository
 
 // thanks (a lot) to SNUTT
 
@@ -37,7 +34,6 @@ interface SugangSnuBatchScheduleRepository {
 class SugangSnuClientRepositoryImpl(
     private val sugangSnuClient: SugangSnuApiClient,
 ) : SugangSnuClientRepository {
-
     companion object {
         const val SUGANG_SNU_LECTURE_EXCEL_DOWNLOAD_PATH = "/sugang/cc/cc100InterfaceExcel.action"
         val DEFAULT_LECTURE_EXCEL_DOWNLOAD_PARAMS =
@@ -71,7 +67,7 @@ class SugangSnuClientRepositoryImpl(
                     query(DEFAULT_LECTURE_EXCEL_DOWNLOAD_PARAMS)
                     queryParam("srchLanguage", language)
                     queryParam("srchOpenSchyy", year)
-                    queryParam("srchOpenShtm", semesterToSugangSnuSearchString (semester))
+                    queryParam("srchOpenShtm", semesterToSugangSnuSearchString(semester))
                     build()
                 }
             }.accept(MediaType.TEXT_HTML)

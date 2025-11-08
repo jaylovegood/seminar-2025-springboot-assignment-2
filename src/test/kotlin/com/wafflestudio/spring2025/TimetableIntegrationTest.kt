@@ -2,17 +2,16 @@ package com.wafflestudio.spring2025
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.wafflestudio.spring2025.common.LectureSchedule
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
 import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
-import com.wafflestudio.spring2025.lecture.repository.LectureTimePlaceRepository
 import com.wafflestudio.spring2025.timetable.dto.CreateTimetableRequest
 import com.wafflestudio.spring2025.timetable.dto.ListTimetableResponse
 import com.wafflestudio.spring2025.timetable.dto.UpdateTimetableRequest
-import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
-import org.junit.jupiter.api.Assertions.assertTrue
 import com.wafflestudio.spring2025.timetableLecture.dto.CreateTimetableLectureRequest
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -230,123 +229,120 @@ class TimetableIntegrationTest
         val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
         val request = CreateTimetableLectureRequest(timetable.id!!, lecture.id!!)
 
-        mvc
-            .perform(
-                post("/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}", timetable.id!!, lecture.id!!)
-                    .header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.timetableId").value(timetable.id!!))
-            .andExpect(jsonPath("$.lecture.id").value(lecture.id!!))
-    }
+            mvc
+                .perform(
+                    post("/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}", timetable.id!!, lecture.id!!)
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.timetableId").value(timetable.id!!))
+                .andExpect(jsonPath("$.lecture.id").value(lecture.id!!))
+        }
 
-    @Test
-    fun `should return error when adding overlapping course to timetable`() {
-        // 겹치는 강의는 추가할 수 없다
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
+        @Test
+        fun `should return error when adding overlapping course to timetable`() {
+            // 겹치는 강의는 추가할 수 없다
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
 
-        // 강의 A (기존)
-        val lectureA = dataGenerator.generateLecture()
-        dataGenerator.insertTimetableLecture(timetable, lectureA)
-        val ltp = dataGenerator.generateLectureTimePlace(lectureA.id!!)
-        // 강의 B (겹치는 시간으로)
-        val lectureB = dataGenerator.generateLecture()
-        dataGenerator.generateLectureTimePlacefix(lectureB.id!!, ltp.schedule)
-        val request = CreateTimetableLectureRequest(timetable.id!!, lectureB.id!!)
-        // when & then
-        mvc
-            .perform(
-                post(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}",
-                    timetable.id,
-                    lectureB.id
-                )
-                    .header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)),
-            ).andExpect(status().isBadRequest)
-    }
+            // 강의 A (기존)
+            val lectureA = dataGenerator.generateLecture()
+            dataGenerator.insertTimetableLecture(timetable, lectureA)
+            val ltp = dataGenerator.generateLectureTimePlace(lectureA.id!!)
+            // 강의 B (겹치는 시간으로)
+            val lectureB = dataGenerator.generateLecture()
+            dataGenerator.generateLectureTimePlacefix(lectureB.id!!, ltp.schedule)
+            val request = CreateTimetableLectureRequest(timetable.id!!, lectureB.id!!)
+            // when & then
+            mvc
+                .perform(
+                    post(
+                        "/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}",
+                        timetable.id,
+                        lectureB.id,
+                    ).header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)),
+                ).andExpect(status().isBadRequest)
+        }
 
-    @Test
-    fun `should not add a course to another user's timetable`() {
-        // 시간표 주인만 바꿀수 있다.
-        // given
-        val (owner, _) = dataGenerator.generateUser() // 시간표의 주인
-        val (_, token) = dataGenerator.generateUser() // 다른 사용자
-        val timetable = dataGenerator.generateTimetable(user = owner) // owner 소유의 시간표
-        val lecture = dataGenerator.generateLecture()
-        dataGenerator.generateLectureTimePlace(lecture.id!!)
-        val request = CreateTimetableLectureRequest(timetable.id!!, lecture.id!!)
+        @Test
+        fun `should not add a course to another user's timetable`() {
+            // 시간표 주인만 바꿀수 있다.
+            // given
+            val (owner, _) = dataGenerator.generateUser() // 시간표의 주인
+            val (_, token) = dataGenerator.generateUser() // 다른 사용자
+            val timetable = dataGenerator.generateTimetable(user = owner) // owner 소유의 시간표
+            val lecture = dataGenerator.generateLecture()
+            dataGenerator.generateLectureTimePlace(lecture.id!!)
+            val request = CreateTimetableLectureRequest(timetable.id!!, lecture.id!!)
 
-        // when & then
-        mvc
-            .perform(
-                patch(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}",
-                    timetable.id,
-                    lecture.id!!,
-                )
-                    .header("Authorization", "Bearer $token") // attacker의 토큰으로 요청
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)),
-            ).andExpect(status().isForbidden)
-    }
+            // when & then
+            mvc
+                .perform(
+                    post(
+                        "/api/v1/timetables/{timetableId}/timetableLectures/{lectureId}",
+                        timetable.id,
+                        lecture.id!!,
+                    ).header("Authorization", "Bearer $token") // attacker의 토큰으로 요청
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)),
+                ).andExpect(status().isForbidden)
+        }
 
-    @Test
-    fun `should remove a course from timetable`() {
-        // 시간표를 지울 수 있다.
-        // given
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
-        val lecture = dataGenerator.generateLecture()
-        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture) // timetable_lecture 관계 추가
+        @Test
+        fun `should remove a course from timetable`() {
+            // 시간표를 지울 수 있다.
+            // given
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+            val lecture = dataGenerator.generateLecture()
+            val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture) // timetable_lecture 관계 추가
 
-        // when & then
-        mvc
-            .perform(
-                delete(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
-                    timetable.id,
-                    timetableLecture.id,
-                ).header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON),
-            ).andExpect(status().isNoContent)
-        mvc
-            .perform(
-                delete(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
-                    timetable.id,
-                    timetableLecture.id,
-                ).header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON),
-            ).andExpect(status().isNotFound)
-    }
+            // when & then
+            mvc
+                .perform(
+                    delete(
+                        "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
+                        timetable.id,
+                        timetableLecture.id,
+                    ).header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON),
+                ).andExpect(status().isNoContent)
+            mvc
+                .perform(
+                    delete(
+                        "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
+                        timetable.id,
+                        timetableLecture.id,
+                    ).header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON),
+                ).andExpect(status().isNotFound)
+        }
 
-    @Test
-    fun `should not remove a course from another user's timetable`() {
-        // 시간표 주인은 주인만 제거할 수 있다.
-        // given
-        val (owner, _) = dataGenerator.generateUser() // 시간표 주인
-        val (_, token) = dataGenerator.generateUser() // 다른 사용자
-        val timetable = dataGenerator.generateTimetable(user = owner)
-        val lecture = dataGenerator.generateLecture()
-        val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
-        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture)
+        @Test
+        fun `should not remove a course from another user's timetable`() {
+            // 시간표 주인은 주인만 제거할 수 있다.
+            // given
+            val (owner, _) = dataGenerator.generateUser() // 시간표 주인
+            val (_, token) = dataGenerator.generateUser() // 다른 사용자
+            val timetable = dataGenerator.generateTimetable(user = owner)
+            val lecture = dataGenerator.generateLecture()
+            val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
+            val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture)
 
-        // when & then
-        mvc
-            .perform(
-                delete(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
-                    timetable.id,
-                    timetableLecture.id,
-                ).header("Authorization", "Bearer $token") // 공격자 토큰
-                    .contentType(MediaType.APPLICATION_JSON),
-            ).andExpect(status().isForbidden)
-
-    }
+            // when & then
+            mvc
+                .perform(
+                    delete(
+                        "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
+                        timetable.id,
+                        timetableLecture.id,
+                    ).header("Authorization", "Bearer $token") // 공격자 토큰
+                        .contentType(MediaType.APPLICATION_JSON),
+                ).andExpect(status().isForbidden)
+        }
 
     //        @Disabled("곧 안내드리겠습니다")
     @Test
@@ -383,16 +379,15 @@ class TimetableIntegrationTest
         val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture)
 
         // when & then
-        mvc.perform(
-            get(
-                "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
-                timetable.id,
-                timetableLecture.id
-            )
-                .header("Authorization", "Bearer $token")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk)
+        mvc
+            .perform(
+                get(
+                    "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
+                    timetable.id,
+                    timetableLecture.id,
+                ).header("Authorization", "Bearer $token")
+                    .contentType(MediaType.APPLICATION_JSON),
+            ).andExpect(status().isOk)
             // LectureDto가 정상적으로 내려오는지만 확인
             .andExpect(jsonPath("$.title").value("데이터베이스"))
     }

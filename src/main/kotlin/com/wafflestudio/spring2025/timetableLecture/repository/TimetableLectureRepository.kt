@@ -4,7 +4,6 @@ import com.wafflestudio.spring2025.timetableLecture.model.TimetableLecture
 import com.wafflestudio.spring2025.timetableLecture.model.TimetableLectureWithLecture
 import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.repository.CrudRepository
-import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -55,7 +54,12 @@ interface TimetableLectureRepository : CrudRepository<TimetableLecture, Long> {
             ltp_existing.start_time < ltp_new.end_time
         AND ltp_new.start_time < ltp_existing.end_time
       )
-    """
+    """,
     )
-    fun hasTimeConflict(timetableId: Long, lectureId: Long): Boolean
+    fun hasTimeConflict(
+        timetableId: Long,
+        lectureId: Long,
+    ): Boolean
+
+    fun deleteAllByTimetableId(timetableId: Long)
 }

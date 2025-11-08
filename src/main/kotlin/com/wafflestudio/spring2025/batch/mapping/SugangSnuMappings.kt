@@ -9,7 +9,6 @@ import org.apache.poi.ss.usermodel.Cell
 import java.time.LocalTime
 
 object SugangSnuMappings {
-
     private val classTimeRegEx =
         """^(?<day>[월화수목금토일])\((?<startHour>\d{2}):(?<startMinute>\d{2})~(?<endHour>\d{2}):(?<endMinute>\d{2})\)$""".toRegex()
 
@@ -33,10 +32,7 @@ object SugangSnuMappings {
             else -> DayOfWeek.MON // FIXME
         }
 
-
-    fun parseSugangSnuClassTime(
-        timeString: String
-    ): LectureSchedule =
+    fun parseSugangSnuClassTime(timeString: String): LectureSchedule =
         classTimeRegEx.find(timeString)!!.groups.let { matchResult ->
             val dayOfWeek = matchResult["day"]!!.value
             val startHour = matchResult["startHour"]!!.value.toInt()
@@ -47,16 +43,15 @@ object SugangSnuMappings {
                 dayOfWeek = koreanToDayOfWeek(dayOfWeek),
                 startTime = LocalTime.of(startHour, startMinute),
                 endTime = LocalTime.of(endHour, endMinute),
-                location = ""
+                location = "",
             )
         }
 
-
     fun convertTextToSchedules(
         classTimesTexts: List<String>,
-        locationTexts: List<String>
-    ): List<LectureSchedule> {
-        return runCatching {
+        locationTexts: List<String>,
+    ): List<LectureSchedule> =
+        runCatching {
             val sugangSnuClassTimes: List<LectureSchedule> =
                 classTimesTexts
                     .filter { it.isNotBlank() }
@@ -77,14 +72,12 @@ object SugangSnuMappings {
                         dayOfWeek = classTime.dayOfWeek,
                         startTime = classTime.startTime,
                         endTime = classTime.endTime,
-                        location = location
+                        location = location,
                     )
-                }
-                .sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
+                }.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
         }.getOrElse {
             emptyList()
         }
-    }
 
     fun convertSugangSnuRowToLecture(
         row: List<Cell>,
@@ -103,7 +96,7 @@ object SugangSnuMappings {
         val college = row.getCellByColumnName("개설대학").take(30)
         val department = row.getCellByColumnName("개설학과").take(30)
         val academicCourse = row.getCellByColumnName("이수과정").take(20)
-        val grade = row.getCellByColumnName("학년").ifEmpty{"0"}[0].code - '0'.code
+        val grade = row.getCellByColumnName("학년").ifEmpty { "0" }[0].code - '0'.code
         val courseNumber = row.getCellByColumnName("교과목번호").take(20)
         val lectureNumber = row.getCellByColumnName("강좌번호").take(20)
         val courseTitle = row.getCellByColumnName("교과목명").take(50)
@@ -137,10 +130,8 @@ object SugangSnuMappings {
         )
     }
 
-    fun sugangSnuLectureToLectureModel(
-        sugangSnuLecture: SugangSnuLecture,
-    ): Lecture {
-        return Lecture(
+    fun sugangSnuLectureToLectureModel(sugangSnuLecture: SugangSnuLecture): Lecture =
+        Lecture(
             id = null,
             academicYear = sugangSnuLecture.academicYear,
             semester = sugangSnuLecture.semester,
@@ -156,5 +147,4 @@ object SugangSnuMappings {
             credit = sugangSnuLecture.credit,
             lecturer = sugangSnuLecture.lecturer,
         )
-    }
 }

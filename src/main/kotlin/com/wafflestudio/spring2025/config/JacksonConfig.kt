@@ -10,8 +10,9 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class JacksonConfig {
     @Bean
-    fun objectMapper(): ObjectMapper = ObjectMapper()
-        .registerKotlinModule()
-        .registerModule(JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    fun objectMapper(): ObjectMapper =
+        ObjectMapper()
+            .registerKotlinModule()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 }
