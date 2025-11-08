@@ -318,7 +318,7 @@ class TimetableIntegrationTest
                 .perform(
                     post("/api/v1/admin/batch/sugang-snu")
                         .param("year", "2025")
-                        .param("semester", "SUMMER")
+                        .param("semester", "SPRING")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().`is`(200))
@@ -331,7 +331,6 @@ class TimetableIntegrationTest
                         .header("Authorization", "Bearer $token")
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.paging.hasNext").value(true))
-
         }
 
         @Test

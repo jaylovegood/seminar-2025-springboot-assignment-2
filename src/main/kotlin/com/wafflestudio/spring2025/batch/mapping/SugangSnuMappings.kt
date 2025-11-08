@@ -99,19 +99,19 @@ object SugangSnuMappings {
                 },
             ].stringCellValue
 
-        val classification = row.getCellByColumnName("교과구분")
-        val college = row.getCellByColumnName("개설대학")
-        val department = row.getCellByColumnName("개설학과")
-        val academicCourse = row.getCellByColumnName("이수과정")
+        val classification = row.getCellByColumnName("교과구분").take(10)
+        val college = row.getCellByColumnName("개설대학").take(30)
+        val department = row.getCellByColumnName("개설학과").take(30)
+        val academicCourse = row.getCellByColumnName("이수과정").take(20)
         val grade = row.getCellByColumnName("학년").ifEmpty{"0"}[0].code - '0'.code
-        val courseNumber = row.getCellByColumnName("교과목번호")
-        val lectureNumber = row.getCellByColumnName("강좌번호")
-        val courseTitle = row.getCellByColumnName("교과목명")
-        val courseSubtitle = row.getCellByColumnName("부제명")
+        val courseNumber = row.getCellByColumnName("교과목번호").take(20)
+        val lectureNumber = row.getCellByColumnName("강좌번호").take(20)
+        val courseTitle = row.getCellByColumnName("교과목명").take(50)
+        val courseSubtitle = row.getCellByColumnName("부제명").take(50)
         val credit = row.getCellByColumnName("학점").toInt()
         val classTimeText = row.getCellByColumnName("수업교시")
         val location = row.getCellByColumnName("강의실(동-호)(#연건, *평창)")
-        val instructor = row.getCellByColumnName("주담당교수")
+        val instructor = row.getCellByColumnName("주담당교수").take(50)
 
         val classTimes =
             convertTextToSchedules(classTimeText.split("/"), location.split("/"))
