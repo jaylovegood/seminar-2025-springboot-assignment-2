@@ -8,7 +8,9 @@ import com.wafflestudio.spring2025.common.DayOfWeek
 import com.wafflestudio.spring2025.common.LectureSchedule
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.lecture.model.Lecture
+import com.wafflestudio.spring2025.lecture.model.LectureTimePlace
 import com.wafflestudio.spring2025.lecture.repository.LectureRepository
+import com.wafflestudio.spring2025.lecture.repository.LectureTimePlaceRepository
 import com.wafflestudio.spring2025.post.model.Post
 import com.wafflestudio.spring2025.post.repository.PostRepository
 import com.wafflestudio.spring2025.timetable.model.Timetable
@@ -33,19 +35,25 @@ class DataGenerator(
     private val lectureRepository: LectureRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val timetableLectureRepository: TimetableLectureRepository,
+    private val lecturetimeplaceRepository: LectureTimePlaceRepository,
 ) {
-    private val startCandidates = listOf(
-        LocalTime.of(9, 0),
-        LocalTime.of(10, 30),
-        LocalTime.of(13, 0),
-        LocalTime.of(15, 0),
-        LocalTime.of(16, 30),
-        LocalTime.of(18, 0),
-    )
+    private val startCandidates =
+        listOf(
+            LocalTime.of(9, 0),
+            LocalTime.of(10, 30),
+            LocalTime.of(13, 0),
+            LocalTime.of(15, 0),
+            LocalTime.of(16, 30),
+            LocalTime.of(18, 0),
+        )
     private val durations = listOf(60L, 75L, 90L, 120L)
 
-    private fun overlap(aStart: LocalTime, aEnd: LocalTime, bStart: LocalTime, bEnd: LocalTime) =
-        aStart < bEnd && bStart < aEnd
+    private fun overlap(
+        aStart: LocalTime,
+        aEnd: LocalTime,
+        bStart: LocalTime,
+        bEnd: LocalTime,
+    ) = aStart < bEnd && bStart < aEnd
 
     fun generateUser(
         username: String? = null,
@@ -141,7 +149,7 @@ class DataGenerator(
         val lecture =
             lectureRepository.save(
                 Lecture(
-                    academicYear = academicYear ?: Random.Default.nextInt(2020, 2025),
+                    academicYear = academicYear ?: Random.Default.nextInt(2025, 2026),
                     semester = semester ?: Semester.entries.random(),
                     lectureType = lectureType ?: arrayOf("전선", "전필", "교양", "교직", "논문").random(),
                     college = college ?: "college-${Random.Default.nextInt(10)}",
@@ -156,92 +164,59 @@ class DataGenerator(
                     lecturer = lecturer ?: "lecturer-${Random.Default.nextInt(1000)}",
                 ),
             )
+
         return lecture
     }
-    fun generateNonOverlappingSchedules(
-        count: Int = 2,
-        day: DayOfWeek = DayOfWeek.MON,
-        durationMinutes: Long = 75L,
-    ): List<LectureSchedule> {
-        val schedules = mutableListOf<LectureSchedule>()
-        for (i in 0 until count) {
-            val start = startCandidates.firstOrNull { s ->
-                val end = s.plusMinutes(durationMinutes)
-                schedules.none { p -> overlap(p.startTime, p.endTime, s, end) }
-            } ?: LocalTime.of(20, 0)
-            schedules += LectureSchedule(
+
+    fun generateLectureTimePlace(lectureId: Long): LectureTimePlace {
+        // 임의의 요일 하나 선택
+        val day = DayOfWeek.values().random()
+
+        // 1~10교시 중 랜덤 시간 (1교시 = 9:00)
+        val startHour = 9 + Random.nextInt(0, 8)
+        val startTime = LocalTime.of(startHour, 0)
+        val endTime = startTime.plusMinutes(90)
+
+        // 랜덤 강의실 이름
+        val location = listOf("301동 101호", "302동 205호", "공학관 401", "사범대 201", "인문관 102").random()
+
+        // LectureSchedule 객체 생성
+        val schedule =
+            LectureSchedule(
                 dayOfWeek = day,
-                startTime = start,
-                endTime = start.plusMinutes(durationMinutes),
-                location = "B-${Random.nextInt(10)} R-${Random.nextInt(300)}",
+                startTime = startTime,
+                endTime = endTime,
+                location = location,
             )
-        }
-        return schedules
-    }
-    fun generateOverlappingSchedules(
-        day: DayOfWeek = DayOfWeek.MON,
-        baseStart: LocalTime = LocalTime.of(9, 0),
-        baseDurationMinutes: Long = 90L,
-        shiftMinutes: Long = 15L,
-    ): List<LectureSchedule> {
-        val baseEnd = baseStart.plusMinutes(baseDurationMinutes)
-        val s1 = LectureSchedule(
-            dayOfWeek = day,
-            startTime = baseStart,
-            endTime = baseEnd,
-            location = "B-1 R-101",
-        )
-        val s2 = LectureSchedule(
-            dayOfWeek = day,
-            startTime = baseStart.plusMinutes(shiftMinutes),
-            endTime = baseEnd.plusMinutes(shiftMinutes),
-            location = "B-1 R-101",
-        )
-        return listOf(s1, s2)
-    }
-    fun generateNonOverlappingWith(
-        existing: List<LectureSchedule>,
-        preferDay: DayOfWeek = DayOfWeek.MON,
-        durationMinutes: Long = 75L,
-    ): LectureSchedule {
-        val start = startCandidates.firstOrNull { s ->
-            val e = s.plusMinutes(durationMinutes)
-            existing.none { ex ->
-                ex.dayOfWeek == preferDay && overlap(ex.startTime, ex.endTime, s, e)
-            }
-        } ?: LocalTime.of(20, 0)
-        return LectureSchedule(
-            dayOfWeek = preferDay,
-            startTime = start,
-            endTime = start.plusMinutes(durationMinutes),
-            location = "B-${Random.nextInt(10)} R-${Random.nextInt(300)}",
+
+        return lecturetimeplaceRepository.save(
+            LectureTimePlace(
+                id = null,
+                lectureId = lectureId,
+                schedule = schedule,
+            ),
         )
     }
 
-    /** ✅ 기존 스케줄 리스트와 겹치게 새 스케줄 하나 생성 */
-    fun generateOverlappingWith(
-        existing: List<LectureSchedule>,
-        preferDay: DayOfWeek = DayOfWeek.MON,
-        shiftMinutes: Long = 15L,
-    ): LectureSchedule {
-        val base = existing.firstOrNull { it.dayOfWeek == preferDay } ?: existing.first()
-        return LectureSchedule(
-            dayOfWeek = base.dayOfWeek,
-            startTime = base.startTime.plusMinutes(shiftMinutes),
-            endTime = base.endTime.plusMinutes(shiftMinutes),
-            location = base.location,
+    fun generateLectureTimePlacefix(
+        lectureId: Long,
+        schedule: LectureSchedule,
+    ): LectureTimePlace =
+        lecturetimeplaceRepository.save(
+            LectureTimePlace(
+                lectureId = lectureId,
+                schedule = schedule,
+            ),
         )
-    }
-    fun insertTimetableLecture(timetable: Timetable, lecture: Lecture, schedules: List<LectureSchedule>) {
+
+    fun insertTimetableLecture(
+        timetable: Timetable,
+        lecture: Lecture,
+    ): TimetableLecture =
         timetableLectureRepository.save(
             TimetableLecture(
                 timetableId = timetable.id!!,
                 lectureId = lecture.id!!,
-            )
+            ),
         )
-        // schedules는 DB엔 안 넣어도 괜찮음 — 검증용 DTO에서만 사용
-    }
-
 }
-
-

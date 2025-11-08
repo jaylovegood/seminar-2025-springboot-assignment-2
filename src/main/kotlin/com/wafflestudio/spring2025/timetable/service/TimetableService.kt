@@ -8,6 +8,7 @@ import com.wafflestudio.spring2025.timetable.TimetableUpdateForbiddenException
 import com.wafflestudio.spring2025.timetable.dto.core.TimetableDto
 import com.wafflestudio.spring2025.timetable.model.Timetable
 import com.wafflestudio.spring2025.timetable.repository.TimetableRepository
+import com.wafflestudio.spring2025.timetableLecture.repository.TimetableLectureRepository
 import com.wafflestudio.spring2025.user.model.User
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service
 @Service
 class TimetableService(
     private val timetableRepository: TimetableRepository,
+    private val timetableLectureRepository: TimetableLectureRepository,
 ) {
     fun list(userId: Long): List<TimetableDto> =
         timetableRepository
@@ -90,7 +92,7 @@ class TimetableService(
         if (timetable.userId != user.id) {
             throw TimetableUpdateForbiddenException()
         }
-
+        timetableLectureRepository.deleteAllByTimetableId(timetable.id!!)
         timetableRepository.delete(timetable)
     }
 }

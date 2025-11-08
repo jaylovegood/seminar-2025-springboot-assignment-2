@@ -20,10 +20,13 @@ data class LectureDto(
     val credit: Int,
     val lecturer: String,
     val schedule: List<LectureSchedule>,
-){
+) {
     companion object {
-        fun from(lecture: Lecture, schedules: List<LectureSchedule>): LectureDto {
-            return LectureDto(
+        fun from(
+            lecture: Lecture,
+            schedules: List<LectureSchedule>,
+        ): LectureDto =
+            LectureDto(
                 id = lecture.id!!,
                 academicYear = lecture.academicYear,
                 semester = lecture.semester,
@@ -38,8 +41,7 @@ data class LectureDto(
                 subtitle = lecture.subtitle,
                 credit = lecture.credit,
                 lecturer = lecture.lecturer,
-                schedule = schedules
+                schedule = schedules,
             )
-        }
     }
 }
