@@ -2,7 +2,6 @@ package com.wafflestudio.spring2025
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.wafflestudio.spring2025.common.LectureSchedule
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
@@ -38,196 +37,196 @@ class TimetableIntegrationTest
         private val mapper: ObjectMapper,
         private val dataGenerator: DataGenerator,
     ) {
-    @Test
-    fun `should create a timetable`() {
-        // 시간표를 생성할 수 있다
-        val (user, token) = dataGenerator.generateUser()
-        val timetableName = "timetableName1"
-        val year = 2025
-        val semester = Semester.SPRING
+        @Test
+        fun `should create a timetable`() {
+            // 시간표를 생성할 수 있다
+            val (user, token) = dataGenerator.generateUser()
+            val timetableName = "timetableName1"
+            val year = 2025
+            val semester = Semester.SPRING
 
-        val request = CreateTimetableRequest(timetableName, year, semester)
-        mvc
-            .perform(
-                post("/api/v1/timetables")
-                    .header("Authorization", "Bearer $token")
-                    .content(mapper.writeValueAsString(request))
-                    .contentType(MediaType.APPLICATION_JSON),
-            ).andExpect(status().`is`(200))
-            .andExpect(jsonPath("$.id").exists())
-            .andExpect(jsonPath("$.user.id").value(user.id!!))
-            .andExpect(jsonPath("$.timetableName").value(request.timetableName))
-            .andExpect(jsonPath("$.year").value(request.year))
-            .andExpect(jsonPath("$.semester").value(request.semester.name))
-    }
-
-    @Test
-    fun `should retrieve all own timetables`() {
-        // 자신의 모든 시간표 목록을 조회할 수 있다
-        val (user1, token1) = dataGenerator.generateUser()
-        repeat(10) {
-            dataGenerator.generateTimetable(user = user1)
-        }
-
-        val (user2, token2) = dataGenerator.generateUser()
-        repeat(5) {
-            dataGenerator.generateTimetable(user = user2)
-        }
-
-        val response =
+            val request = CreateTimetableRequest(timetableName, year, semester)
             mvc
                 .perform(
-                    get("/api/v1/timetables")
-                        .header("Authorization", "Bearer $token1")
+                    post("/api/v1/timetables")
+                        .header("Authorization", "Bearer $token")
+                        .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON),
                 ).andExpect(status().`is`(200))
-                .andReturn()
-                .response
-                .getContentAsString(Charsets.UTF_8)
-                .let {
-                    mapper.readValue(it, object : TypeReference<ListTimetableResponse>() {})
-                }
-        assert(response.size == 10)
-        assert(response.all { it.user.id == user1.id })
-    }
-
-    @Test
-    fun `should retrieve timetable details`() {
-        // 시간표를 조회할 수 있다.
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
-        val timetableId = timetable.id!!
-
-        // when & then
-        mvc
-            .perform(
-                get("/api/v1/timetables/{timetableId}/timetableLectures", timetableId)
-                    .header("Authorization", "Bearer $token")
-                    .accept(MediaType.APPLICATION_JSON),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$[0].timetableId").value(timetableId))
-            .andExpect(jsonPath("$[0].lecture").exists())
-            .andExpect(jsonPath("$[0].lecture.schedule").isArray)
-    }
-
-    @Test
-    fun `should update timetable name`() {
-        // 시간표 이름을 수정할 수 있다
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
-        val request = UpdateTimetableRequest("new name")
-
-        mvc
-            .perform(
-                patch("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(timetable.id!!))
-            .andExpect(jsonPath("$.user.id").value(user.id!!))
-            .andExpect(jsonPath("$.timetableName").value(request.timetableName))
-            .andExpect(jsonPath("$.year").value(timetable.year))
-            .andExpect(jsonPath("$.semester").value(timetable.semester.name))
-    }
-
-    @Test
-    fun `should not update another user's timetable`() {
-        // 다른 사람의 시간표는 수정할 수 없다
-        val timetable = dataGenerator.generateTimetable()
-        val (_, otherToken) = dataGenerator.generateUser()
-        val request = UpdateTimetableRequest("new name")
-
-        mvc
-            .perform(
-                patch("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $otherToken")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(request)),
-            ).andExpect(status().isForbidden)
-    }
-
-    @Test
-    fun `should delete a timetable`() {
-        // 시간표를 삭제할 수 있다
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
-
-        mvc
-            .perform(
-                delete("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $token"),
-            ).andExpect(status().isNoContent)
-
-        mvc
-            .perform(
-                get("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $token"),
-            ).andExpect(status().isNotFound)
-    }
-
-    @Test
-    fun `should not delete another user's timetable`() {
-        // 다른 사람의 시간표는 삭제할 수 없다
-        val timetable = dataGenerator.generateTimetable()
-        val (_, otherToken) = dataGenerator.generateUser()
-
-        mvc
-            .perform(
-                delete("/api/v1/timetables/${timetable.id!!}")
-                    .header("Authorization", "Bearer $otherToken"),
-            ).andExpect(status().isForbidden)
-    }
-
-    @Test
-    fun `should search for courses based on keyword with pagination`() {
-        // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
-        repeat(400) {
-            dataGenerator.generateLecture()
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.user.id").value(user.id!!))
+                .andExpect(jsonPath("$.timetableName").value(request.timetableName))
+                .andExpect(jsonPath("$.year").value(request.year))
+                .andExpect(jsonPath("$.semester").value(request.semester.name))
         }
-        val (_, token) = dataGenerator.generateUser()
 
-        val response =
+        @Test
+        fun `should retrieve all own timetables`() {
+            // 자신의 모든 시간표 목록을 조회할 수 있다
+            val (user1, token1) = dataGenerator.generateUser()
+            repeat(10) {
+                dataGenerator.generateTimetable(user = user1)
+            }
+
+            val (user2, token2) = dataGenerator.generateUser()
+            repeat(5) {
+                dataGenerator.generateTimetable(user = user2)
+            }
+
+            val response =
+                mvc
+                    .perform(
+                        get("/api/v1/timetables")
+                            .header("Authorization", "Bearer $token1")
+                            .contentType(MediaType.APPLICATION_JSON),
+                    ).andExpect(status().`is`(200))
+                    .andReturn()
+                    .response
+                    .getContentAsString(Charsets.UTF_8)
+                    .let {
+                        mapper.readValue(it, object : TypeReference<ListTimetableResponse>() {})
+                    }
+            assert(response.size == 10)
+            assert(response.all { it.user.id == user1.id })
+        }
+
+        @Test
+        fun `should retrieve timetable details`() {
+            // 시간표를 조회할 수 있다.
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+            val timetableId = timetable.id!!
+
+            // when & then
             mvc
                 .perform(
-                    get("/api/v1/lectures?keyword=-3&year=2025&semester=SUMMER&limit=5")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer $token"),
+                    get("/api/v1/timetables/{timetableId}/timetableLectures", timetableId)
+                        .header("Authorization", "Bearer $token")
+                        .accept(MediaType.APPLICATION_JSON),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.paging.hasNext").value(true))
-                .andReturn()
-                .response
-                .getContentAsString(Charsets.UTF_8)
-                .let {
-                    mapper.readValue(it, LecturePagingResponse::class.java)
-                }
-        assertKeywordIsInLectures("-3", response.data)
+                .andExpect(jsonPath("$[0].timetableId").value(timetableId))
+                .andExpect(jsonPath("$[0].lecture").exists())
+                .andExpect(jsonPath("$[0].lecture.schedule").isArray)
+        }
 
-        val nextResponse =
+        @Test
+        fun `should update timetable name`() {
+            // 시간표 이름을 수정할 수 있다
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+            val request = UpdateTimetableRequest("new name")
+
             mvc
                 .perform(
-                    get("/api/v1/lectures?keyword=title-3&year=2025&semester=SUMMER&nextId=${response.paging.nextId}&limit=5")
+                    patch("/api/v1/timetables/${timetable.id!!}")
+                        .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer $token"),
+                        .content(mapper.writeValueAsString(request)),
                 ).andExpect(status().isOk)
-                .andReturn()
-                .response
-                .getContentAsString(Charsets.UTF_8)
-                .let {
-                    mapper.readValue(it, LecturePagingResponse::class.java)
-                }
-        assertKeywordIsInLectures("title-3", nextResponse.data)
-        assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
-        assertTrue(nextResponse.data.minOf { it.id } > response.paging.nextId!!)
-    }
+                .andExpect(jsonPath("$.id").value(timetable.id!!))
+                .andExpect(jsonPath("$.user.id").value(user.id!!))
+                .andExpect(jsonPath("$.timetableName").value(request.timetableName))
+                .andExpect(jsonPath("$.year").value(timetable.year))
+                .andExpect(jsonPath("$.semester").value(timetable.semester.name))
+        }
 
-    fun `should add a course to timetable (using DataGenerator only)`() {
-        // 시간표에 강의를 추가할 수 있다.
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
-        val lecture = dataGenerator.generateLecture()
-        val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
-        val request = CreateTimetableLectureRequest(timetable.id!!, lecture.id!!)
+        @Test
+        fun `should not update another user's timetable`() {
+            // 다른 사람의 시간표는 수정할 수 없다
+            val timetable = dataGenerator.generateTimetable()
+            val (_, otherToken) = dataGenerator.generateUser()
+            val request = UpdateTimetableRequest("new name")
+
+            mvc
+                .perform(
+                    patch("/api/v1/timetables/${timetable.id!!}")
+                        .header("Authorization", "Bearer $otherToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)),
+                ).andExpect(status().isForbidden)
+        }
+
+        @Test
+        fun `should delete a timetable`() {
+            // 시간표를 삭제할 수 있다
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+
+            mvc
+                .perform(
+                    delete("/api/v1/timetables/${timetable.id!!}")
+                        .header("Authorization", "Bearer $token"),
+                ).andExpect(status().isNoContent)
+
+            mvc
+                .perform(
+                    get("/api/v1/timetables/${timetable.id!!}")
+                        .header("Authorization", "Bearer $token"),
+                ).andExpect(status().isNotFound)
+        }
+
+        @Test
+        fun `should not delete another user's timetable`() {
+            // 다른 사람의 시간표는 삭제할 수 없다
+            val timetable = dataGenerator.generateTimetable()
+            val (_, otherToken) = dataGenerator.generateUser()
+
+            mvc
+                .perform(
+                    delete("/api/v1/timetables/${timetable.id!!}")
+                        .header("Authorization", "Bearer $otherToken"),
+                ).andExpect(status().isForbidden)
+        }
+
+        @Test
+        fun `should search for courses based on keyword with pagination`() {
+            // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
+            repeat(400) {
+                dataGenerator.generateLecture()
+            }
+            val (_, token) = dataGenerator.generateUser()
+
+            val response =
+                mvc
+                    .perform(
+                        get("/api/v1/lectures?keyword=-3&year=2025&semester=SUMMER&limit=5")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer $token"),
+                    ).andExpect(status().isOk)
+                    .andExpect(jsonPath("$.paging.hasNext").value(true))
+                    .andReturn()
+                    .response
+                    .getContentAsString(Charsets.UTF_8)
+                    .let {
+                        mapper.readValue(it, LecturePagingResponse::class.java)
+                    }
+            assertKeywordIsInLectures("-3", response.data)
+
+            val nextResponse =
+                mvc
+                    .perform(
+                        get("/api/v1/lectures?keyword=title-3&year=2025&semester=SUMMER&nextId=${response.paging.nextId}&limit=5")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer $token"),
+                    ).andExpect(status().isOk)
+                    .andReturn()
+                    .response
+                    .getContentAsString(Charsets.UTF_8)
+                    .let {
+                        mapper.readValue(it, LecturePagingResponse::class.java)
+                    }
+            assertKeywordIsInLectures("title-3", nextResponse.data)
+            assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
+            assertTrue(nextResponse.data.minOf { it.id } > response.paging.nextId!!)
+        }
+
+        fun `should add a course to timetable (using DataGenerator only)`() {
+            // 시간표에 강의를 추가할 수 있다.
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+            val lecture = dataGenerator.generateLecture()
+            val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
+            val request = CreateTimetableLectureRequest(timetable.id!!, lecture.id!!)
 
             mvc
                 .perform(
@@ -344,64 +343,65 @@ class TimetableIntegrationTest
                 ).andExpect(status().isForbidden)
         }
 
-    //        @Disabled("곧 안내드리겠습니다")
-    @Test
-    fun `should fetch and save course information from SNU course registration site`() {
-        // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
-        val (_, token) = dataGenerator.generateUser()
+        //        @Disabled("곧 안내드리겠습니다")
+        @Test
+        fun `should fetch and save course information from SNU course registration site`() {
+            // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
+            val (_, token) = dataGenerator.generateUser()
 
-        mvc
-            .perform(
-                post("/api/v1/admin/batch/sugang-snu")
-                    .param("year", "2025")
-                    .param("semester", "FALL")
-                    .header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON)
-            ).andExpect(status().`is`(200))
+            mvc
+                .perform(
+                    post("/api/v1/admin/batch/sugang-snu")
+                        .param("year", "2025")
+                        .param("semester", "FALL")
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON),
+                ).andExpect(status().`is`(200))
 
-        Thread.sleep(15000)
+            Thread.sleep(15000)
 
-        mvc
-            .perform(
-                get("/api/v1/lectures?year=2025&semester=FALL&keyword=수학&limit=5")
-                    .header("Authorization", "Bearer $token")
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.paging.hasNext").value(true))
-    }
+            mvc
+                .perform(
+                    get("/api/v1/lectures?year=2025&semester=FALL&keyword=수학&limit=5")
+                        .header("Authorization", "Bearer $token"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.paging.hasNext").value(true))
+        }
 
-    @Test
-    fun `should return correct course list and total credits when retrieving timetable details`() {
-        // 강의 상세 정보를 조회할 수 있다.
-        val (user, token) = dataGenerator.generateUser()
-        val timetable = dataGenerator.generateTimetable(user = user)
-        val lecture = dataGenerator.generateLecture(title = "데이터베이스")
-        val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
-        val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture)
+        @Test
+        fun `should return correct course list and total credits when retrieving timetable details`() {
+            // 강의 상세 정보를 조회할 수 있다.
+            val (user, token) = dataGenerator.generateUser()
+            val timetable = dataGenerator.generateTimetable(user = user)
+            val lecture = dataGenerator.generateLecture(title = "데이터베이스")
+            val ltp = dataGenerator.generateLectureTimePlace(lecture.id!!)
+            val timetableLecture = dataGenerator.insertTimetableLecture(timetable, lecture)
 
-        // when & then
-        mvc
-            .perform(
-                get(
-                    "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
-                    timetable.id,
-                    timetableLecture.id,
-                ).header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON),
-            ).andExpect(status().isOk)
-            // LectureDto가 정상적으로 내려오는지만 확인
-            .andExpect(jsonPath("$.title").value("데이터베이스"))
-    }
+            // when & then
+            mvc
+                .perform(
+                    get(
+                        "/api/v1/timetables/{timetableId}/timetableLectures/{timetableLectureId}",
+                        timetable.id,
+                        timetableLecture.id,
+                    ).header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON),
+                ).andExpect(status().isOk)
+                // LectureDto가 정상적으로 내려오는지만 확인
+                .andExpect(jsonPath("$.title").value("데이터베이스"))
+        }
 
-    private fun assertKeywordIsInLectures(
-        keyword: String,
-        lectures: List<LectureDto>
-    ) {
-        lectures.forEach {
-            assertTrue(
-                it.title.contains(keyword)
-                    .or(it.subtitle.contains(keyword))
-                    .or(it.lecturer.contains(keyword))
-            )
+        private fun assertKeywordIsInLectures(
+            keyword: String,
+            lectures: List<LectureDto>,
+        ) {
+            lectures.forEach {
+                assertTrue(
+                    it.title
+                        .contains(keyword)
+                        .or(it.subtitle.contains(keyword))
+                        .or(it.lecturer.contains(keyword)),
+                )
+            }
         }
     }
-}

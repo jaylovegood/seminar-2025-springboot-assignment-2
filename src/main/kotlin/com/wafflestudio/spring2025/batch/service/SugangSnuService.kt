@@ -49,13 +49,12 @@ class SugangSnuService(
             }
     }
 
-    private fun saveSugangSnuLectures(
-        sugangSnuLectures: List<SugangSnuLecture>
-    ): Int{
-        val lectureIds: List<Long> = sugangSnuLectures
-            .map { sugangSnuLectureToLectureModel(it) }
-            .let { lectureRepository.saveAll(it) }
-            .map { it.id!! }
+    private fun saveSugangSnuLectures(sugangSnuLectures: List<SugangSnuLecture>): Int {
+        val lectureIds: List<Long> =
+            sugangSnuLectures
+                .map { sugangSnuLectureToLectureModel(it) }
+                .let { lectureRepository.saveAll(it) }
+                .map { it.id!! }
 
         val lectureSchedules: List<List<LectureSchedule>> =
             sugangSnuLectures
