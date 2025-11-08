@@ -167,6 +167,7 @@ class DataGenerator(
 
         return lecture
     }
+
     fun generateLectureTimePlace(lectureId: Long): LectureTimePlace {
         // 임의의 요일 하나 선택
         val day = DayOfWeek.values().random()
@@ -180,25 +181,33 @@ class DataGenerator(
         val location = listOf("301동 101호", "302동 205호", "공학관 401", "사범대 201", "인문관 102").random()
 
         // LectureSchedule 객체 생성
-        val schedule = LectureSchedule(
-            dayOfWeek = day,
-            startTime = startTime,
-            endTime = endTime,
-            location = location,
-        )
+        val schedule =
+            LectureSchedule(
+                dayOfWeek = day,
+                startTime = startTime,
+                endTime = endTime,
+                location = location,
+            )
 
-        return lecturetimeplaceRepository.save(LectureTimePlace(
-            id = null,
-            lectureId = lectureId,
-            schedule = schedule,
-        ))
+        return lecturetimeplaceRepository.save(
+            LectureTimePlace(
+                id = null,
+                lectureId = lectureId,
+                schedule = schedule,
+            ),
+        )
     }
-    fun generateLectureTimePlacefix(lectureId: Long, schedule: LectureSchedule): LectureTimePlace {
-        return lecturetimeplaceRepository.save(LectureTimePlace(
-            lectureId = lectureId,
-            schedule = schedule,
-        ))
-    }
+
+    fun generateLectureTimePlacefix(
+        lectureId: Long,
+        schedule: LectureSchedule,
+    ): LectureTimePlace =
+        lecturetimeplaceRepository.save(
+            LectureTimePlace(
+                lectureId = lectureId,
+                schedule = schedule,
+            ),
+        )
 
     fun insertTimetableLecture(
         timetable: Timetable,

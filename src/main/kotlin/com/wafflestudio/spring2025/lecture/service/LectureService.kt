@@ -1,6 +1,7 @@
 package com.wafflestudio.spring2025.lecture.service
 
 import com.wafflestudio.spring2025.common.LectureSchedule
+import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.lecture.dto.LecturePaging
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
 import com.wafflestudio.spring2025.lecture.dto.core.LectureDto
@@ -13,6 +14,8 @@ class LectureService(
 ) {
     fun pageByKeyword(
         keyword: String,
+        semester: Semester,
+        academicYear: Int,
         nextId: Long?,
         limit: Int,
     ): LecturePagingResponse {
@@ -20,6 +23,8 @@ class LectureService(
             lectureRepository.getByKeywordWithCursor(
                 keyword = keyword,
                 nextId = nextId,
+                semester = semester,
+                year = academicYear,
                 limit = limit + 1,
             )
 

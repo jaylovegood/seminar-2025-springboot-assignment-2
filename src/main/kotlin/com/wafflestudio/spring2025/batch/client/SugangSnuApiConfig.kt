@@ -15,9 +15,9 @@ class SugangSnuApiConfig {
 
     @Bean
     fun sugangSnuApiClient(): SugangSnuApiClient {
-
         val exchangeStrategies: ExchangeStrategies =
-            ExchangeStrategies.builder()
+            ExchangeStrategies
+                .builder()
                 .codecs { it.defaultCodecs().maxInMemorySize(-1) }
                 .build() // 용량 제한 해제
 
@@ -29,7 +29,7 @@ class SugangSnuApiConfig {
                 it.setAll(
                     mapOf(
                         "User-Agent" to
-                                """
+                            """
                             Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
                             AppleWebKit/537.36 (KHTML, like Gecko)
                             Chrome/86.0.4240.80
@@ -41,5 +41,4 @@ class SugangSnuApiConfig {
             }.build()
             .let(::SugangSnuApiClient)
     }
-
 }
