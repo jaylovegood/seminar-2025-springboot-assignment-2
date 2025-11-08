@@ -90,6 +90,7 @@ class TimetableIntegrationTest
             assert(response.size == 10)
             assert(response.all { it.user.id == user1.id })
         }
+
         @Test
         fun `should update timetable name`() {
             // 시간표 이름을 수정할 수 있다
