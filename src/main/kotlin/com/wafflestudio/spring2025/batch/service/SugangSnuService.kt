@@ -23,9 +23,9 @@ class SugangSnuService (
     suspend fun getAndSaveSugangSnuLectures(
         year: Int,
         semester: Semester,
-    ){
+    ): Int {
         val lectures = getSugangSnuLectures(year, semester)
-        saveSugangSnuLectures(lectures)
+        return saveSugangSnuLectures(lectures)
     }
 
     private suspend fun getSugangSnuLectures(
@@ -53,7 +53,7 @@ class SugangSnuService (
 
     private fun saveSugangSnuLectures(
         sugangSnuLectures: List<SugangSnuLecture>
-    ){
+    ): Int{
         val lectureIds: List<Long> = sugangSnuLectures
             .map { sugangSnuLectureToLectureModel(it) }
             .let { lectureRepository.saveAll(it) }
@@ -75,6 +75,7 @@ class SugangSnuService (
             }
             .flatten()
             .let { lectureTimePlaceRepository.saveAll(it) }
+        return lectureIds.size
     }
 
 }

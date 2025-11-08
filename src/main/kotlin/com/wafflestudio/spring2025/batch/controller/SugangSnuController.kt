@@ -1,5 +1,6 @@
 package com.wafflestudio.spring2025.batch.controller
 
+import com.wafflestudio.spring2025.batch.dto.LectureImportResponse
 import com.wafflestudio.spring2025.batch.service.SugangSnuService
 import com.wafflestudio.spring2025.common.Semester
 import io.swagger.v3.oas.annotations.Operation
@@ -33,8 +34,12 @@ class SugangSnuController(
         @RequestParam year: Int,
         @Parameter(description = "학기 (SPRING, SUMMER, FALL, WINTER)")
         @RequestParam semester: Semester,
-    ): ResponseEntity<String> {
-        sugangSnuService.getAndSaveSugangSnuLectures(year, semester)
-        return ResponseEntity.ok("lectures fetched and saved successfully for $year-$semester")
+    ): ResponseEntity<LectureImportResponse> {
+        val addedCnt: Int = sugangSnuService.getAndSaveSugangSnuLectures(year, semester)
+        return ResponseEntity.ok(LectureImportResponse(
+            academicYear = year,
+            semester = semester,
+            addedCnt = addedCnt,
+        ))
     }
 }
