@@ -327,7 +327,7 @@ class TimetableIntegrationTest
 
             mvc
                 .perform(
-                    get("/api/v1/lectures?keyword=수학&limit=5")
+                    get("/api/v1/lectures?year=2025&semester=SPRING&keyword=수학&limit=5")
                         .header("Authorization", "Bearer $token")
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.paging.hasNext").value(true))

@@ -1,6 +1,7 @@
 package com.wafflestudio.spring2025.lecture.repository
 
 import com.wafflestudio.spring2025.common.LectureSchedule
+import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.lecture.model.Lecture
 import com.wafflestudio.spring2025.lecture.model.LectureTimePlace
 import org.springframework.data.jdbc.repository.query.Query
@@ -12,16 +13,20 @@ interface LectureRepository : CrudRepository<Lecture, Long> {
         """
         SELECT *
         FROM lectures
-        WHERE (title LIKE CONCAT('%', :keyword, '%')
+        WHERE ((:nextId IS NULL) OR (id > :nextId))
+        AND semester = :semester
+        AND academic_year = :year
+        AND ((title LIKE CONCAT('%', :keyword, '%')
         OR subtitle LIKE CONCAT('%', :keyword, '%')
-        OR lecturer LIKE CONCAT('%', :keyword, '%'))
-        AND ((:nextId IS NULL) OR (id > :nextId))
+        OR lecturer LIKE CONCAT('%', :keyword, '%')))
         ORDER BY id
         LIMIT :limit
     """,
     )
     fun getByKeywordWithCursor(
         @Param("keyword") keyword: String,
+        @Param("year") year: Int,
+        @Param("semester") semester: Semester,
         @Param("nextId") nextId: Long?,
         @Param("limit") limit: Int,
     ): List<Lecture>
