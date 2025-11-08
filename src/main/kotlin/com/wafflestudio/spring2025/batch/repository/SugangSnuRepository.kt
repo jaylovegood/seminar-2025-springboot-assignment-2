@@ -22,6 +22,14 @@ interface SugangSnuClientRepository {
     ): PooledDataBuffer
 }
 
+interface SugangSnuBatchRepository {
+
+}
+
+interface SugangSnuBatchScheduleRepository {
+
+}
+
 
 // thanks (a lot) to SNUTT
 
@@ -31,12 +39,6 @@ class SugangSnuClientRepositoryImpl(
 ) : SugangSnuClientRepository {
 
     companion object {
-//        const val SUGANG_SNU_COURSEBOOK_PATH = "/sugang/cc/cc100ajax.action"
-//        const val DEFAULT_COURSEBOOK_PARAMS = "openUpDeptCd=&openDeptCd="
-//        const val SUGANG_SNU_SEARCH_PATH = "/sugang/cc/cc100InterfaceSrch.action"
-//        const val DEFAULT_SEARCH_PAGE_PARAMS = "workType=S&sortKey=&sortOrder="
-//        const val SUGANG_SNU_SEARCH_POPUP_PATH = "/sugang/cc/cc101ajax.action"
-//        const val DEFAULT_SEARCH_POPUP_PARAMS = """t_profPersNo=&workType=+&sbjtSubhCd=000"""
         const val SUGANG_SNU_LECTURE_EXCEL_DOWNLOAD_PATH = "/sugang/cc/cc100InterfaceExcel.action"
         val DEFAULT_LECTURE_EXCEL_DOWNLOAD_PARAMS =
             """
