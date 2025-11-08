@@ -2,6 +2,7 @@ package com.wafflestudio.spring2025
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.wafflestudio.spring2025.common.LectureSchedule
 import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.helper.DataGenerator
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
@@ -91,22 +92,52 @@ class TimetableIntegrationTest
         }
 
         @Test
-        fun `should retrieve timetable details`() {
-            // 시간표를 조회할 수 있다.
+        fun `should return timetable details with NON-overlapping schedules and correct total credits`() {
+            // 시간표 속 모든 강의를 조회할 수 있다.
+            // given
             val (user, token) = dataGenerator.generateUser()
             val timetable = dataGenerator.generateTimetable(user = user)
-            val timetableId = timetable.id!!
+
+            // 강의 A (3학점) — 기본 스케줄 1개 생성
+            val lectureA = dataGenerator.generateLecture(credit = 3)
+            val ltpA = dataGenerator.generateLectureTimePlace(lectureA.id!!)
+            dataGenerator.insertTimetableLecture(timetable, lectureA)
+
+            // 강의 B (2학점) — A와 "겹치지 않도록" 같은 요일에 바로 이어 붙이기 (경계 접촉은 겹침 아님)
+            val lectureB = dataGenerator.generateLecture(credit = 2)
+            val nonOverlapSchedule =
+                LectureSchedule(
+                    dayOfWeek = ltpA.schedule.dayOfWeek,
+                    startTime = ltpA.schedule.endTime, // A의 끝시간 == B의 시작시간 (겹치지 않음)
+                    endTime = ltpA.schedule.endTime.plusMinutes(60), // 1시간짜리
+                    location = "인문관 102",
+                )
+            dataGenerator.generateLectureTimePlacefix(lectureB.id!!, nonOverlapSchedule)
+            dataGenerator.insertTimetableLecture(timetable, lectureB)
 
             // when & then
             mvc
                 .perform(
-                    get("/api/v1/timetables/{timetableId}/timetableLectures", timetableId)
-                        .header("Authorization", "Bearer $token")
-                        .accept(MediaType.APPLICATION_JSON),
+                    get("/api/v1/timetables/{timetableId}/timetableLectures", timetable.id!!)
+                        .header("Authorization", "Bearer $token"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$[0].timetableId").value(timetableId))
-                .andExpect(jsonPath("$[0].lecture").exists())
-                .andExpect(jsonPath("$[0].lecture.schedule").isArray)
+                // 총 학점 = 3 + 2 = 5
+                .andExpect(jsonPath("$.grade").value(lectureA.credit + lectureB.credit))
+                // 강의 개수 = 2
+                .andExpect(jsonPath("$.lectures.length()").value(2))
+                // 각 강의는 스케줄을 최소 1개 갖는다
+                .andExpect(jsonPath("$.lectures[0].lecture.schedule.length()").value(org.hamcrest.Matchers.greaterThan(0)))
+                .andExpect(jsonPath("$.lectures[1].lecture.schedule.length()").value(org.hamcrest.Matchers.greaterThan(0)))
+                // 반환된 강의 id 집합에 A, B 포함
+                .andExpect(
+                    jsonPath(
+                        "$.lectures[*].lecture.id",
+                        org.hamcrest.Matchers.containsInAnyOrder(
+                            lectureA.id!!.toInt(),
+                            lectureB.id!!.toInt(),
+                        ),
+                    ),
+                )
         }
 
         @Test
@@ -353,7 +384,7 @@ class TimetableIntegrationTest
                 .perform(
                     post("/api/v1/admin/batch/sugang-snu")
                         .param("year", "2025")
-                        .param("semester", "FALL")
+                        .param("semester", "SUMMER")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON),
                 ).andExpect(status().`is`(200))
@@ -362,7 +393,7 @@ class TimetableIntegrationTest
 
             mvc
                 .perform(
-                    get("/api/v1/lectures?year=2025&semester=FALL&keyword=수학&limit=5")
+                    get("/api/v1/lectures?year=2025&semester=SUMMER&keyword=수학&limit=5")
                         .header("Authorization", "Bearer $token"),
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.paging.hasNext").value(true))
