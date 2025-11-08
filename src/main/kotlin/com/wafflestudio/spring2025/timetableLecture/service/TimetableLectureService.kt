@@ -56,7 +56,6 @@ class TimetableLectureService(
             )
         val saved = timetableLectureRepository.save(timetableLecture)
 
-
         val schedule = lectureRepository.getScheduleById(lectureId)
 
         return TimetableLectureDto(timetable, saved, lecture, schedule)

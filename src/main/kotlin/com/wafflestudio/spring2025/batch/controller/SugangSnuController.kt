@@ -36,10 +36,12 @@ class SugangSnuController(
         @RequestParam semester: Semester,
     ): ResponseEntity<LectureImportResponse> {
         val addedCnt: Int = sugangSnuService.getAndSaveSugangSnuLectures(year, semester)
-        return ResponseEntity.ok(LectureImportResponse(
-            academicYear = year,
-            semester = semester,
-            addedCnt = addedCnt,
-        ))
+        return ResponseEntity.ok(
+            LectureImportResponse(
+                academicYear = year,
+                semester = semester,
+                addedCnt = addedCnt,
+            ),
+        )
     }
 }
