@@ -1,5 +1,6 @@
 package com.wafflestudio.spring2025.lecture.controller
 
+import com.wafflestudio.spring2025.common.Semester
 import com.wafflestudio.spring2025.lecture.dto.LecturePagingResponse
 import com.wafflestudio.spring2025.lecture.service.LectureService
 import io.swagger.v3.oas.annotations.Operation
@@ -28,8 +29,12 @@ class LectureController(
         ],
     )
     fun search(
-        @Parameter(description = "검색 키워드 (강의 제목, 강의 부제, 교수명)")
+        @Parameter(description = "검색 키워드 (강의 제목, 강의 부제, 교수명 내 포함)")
         @RequestParam keyword: String,
+        @Parameter(description = "학년도")
+        @RequestParam year: Int,
+        @Parameter(description = "학기(SPRING, SUMMER, FALL, WINTER)")
+        @RequestParam semester: String,
         @Parameter(description = "다음 페이지의 시작 강의 ID (첫 페이지는 null)")
         @RequestParam(required = false) nextId: Long? = null,
         @Parameter(description = "페이지당 강의 개수 (기본값: 20)")
@@ -40,6 +45,8 @@ class LectureController(
                 keyword = keyword,
                 nextId = nextId,
                 limit = limit,
+                semester = Semester.valueOf(semester),
+                academicYear = year,
             )
         return ResponseEntity.ok(result)
     }
