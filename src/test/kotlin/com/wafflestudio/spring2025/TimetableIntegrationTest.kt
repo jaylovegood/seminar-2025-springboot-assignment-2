@@ -180,47 +180,47 @@ class TimetableIntegrationTest
             ).andExpect(status().isForbidden)
     }
 
-        @Test
-        fun `should search for courses based on keyword with pagination`() {
-            // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
-            repeat(500) {
-                dataGenerator.generateLecture()
-            }
-            val (_, token) = dataGenerator.generateUser()
-
-            val response =
-                mvc
-                    .perform(
-                        get("/api/v1/lectures?keyword=title-3&limit=5")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer $token"),
-                    ).andExpect(status().isOk)
-                    .andExpect(jsonPath("$.paging.hasNext").value(true))
-                    .andReturn()
-                    .response
-                    .getContentAsString(Charsets.UTF_8)
-                    .let {
-                        mapper.readValue(it, LecturePagingResponse::class.java)
-                    }
-            assertKeywordIsInLectures("title-3", response.data)
-
-            val nextResponse =
-                mvc
-                    .perform(
-                        get("/api/v1/lectures?keyword=title-3&nextId=${response.paging.nextId}&limit=5")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer $token"),
-                    ).andExpect(status().isOk)
-                    .andReturn()
-                    .response
-                    .getContentAsString(Charsets.UTF_8)
-                    .let {
-                        mapper.readValue(it, LecturePagingResponse::class.java)
-                    }
-            assertKeywordIsInLectures("title-3", nextResponse.data)
-            assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
-            assertTrue(nextResponse.data.minOf { it.id } > response.paging.nextId!!)
+    @Test
+    fun `should search for courses based on keyword with pagination`() {
+        // 키워드로 강의를 검색할 수 있으며, 페이지네이션이 올바르게 동작한다
+        repeat(500) {
+            dataGenerator.generateLecture()
         }
+        val (_, token) = dataGenerator.generateUser()
+
+        val response =
+            mvc
+                .perform(
+                    get("/api/v1/lectures?keyword=title-3&limit=5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer $token"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.paging.hasNext").value(true))
+                .andReturn()
+                .response
+                .getContentAsString(Charsets.UTF_8)
+                .let {
+                    mapper.readValue(it, LecturePagingResponse::class.java)
+                }
+        assertKeywordIsInLectures("title-3", response.data)
+
+        val nextResponse =
+            mvc
+                .perform(
+                    get("/api/v1/lectures?keyword=title-3&nextId=${response.paging.nextId}&limit=5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer $token"),
+                ).andExpect(status().isOk)
+                .andReturn()
+                .response
+                .getContentAsString(Charsets.UTF_8)
+                .let {
+                    mapper.readValue(it, LecturePagingResponse::class.java)
+                }
+        assertKeywordIsInLectures("title-3", nextResponse.data)
+        assertTrue((response.data.map { it.id } + nextResponse.data.map { it.id }).toSet().size == 10)
+        assertTrue(nextResponse.data.minOf { it.id } > response.paging.nextId!!)
+    }
 
     fun `should add a course to timetable (using DataGenerator only)`() {
         // 시간표에 강의를 추가할 수 있다.
@@ -349,29 +349,29 @@ class TimetableIntegrationTest
     }
 
     //        @Disabled("곧 안내드리겠습니다")
-        @Test
-        fun `should fetch and save course information from SNU course registration site`() {
-            // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
-            val (_, token) = dataGenerator.generateUser()
+    @Test
+    fun `should fetch and save course information from SNU course registration site`() {
+        // 서울대 수강신청 사이트에서 강의 정보를 가져와 저장할 수 있다
+        val (_, token) = dataGenerator.generateUser()
 
-            mvc
-                .perform(
-                    post("/api/v1/admin/batch/sugang-snu")
-                        .param("year", "2025")
-                        .param("semester", "SPRING")
-                        .header("Authorization", "Bearer $token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().`is`(200))
+        mvc
+            .perform(
+                post("/api/v1/admin/batch/sugang-snu")
+                    .param("year", "2025")
+                    .param("semester", "SPRING")
+                    .header("Authorization", "Bearer $token")
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().`is`(200))
 
-            Thread.sleep(10000)
+        Thread.sleep(10000)
 
-            mvc
-                .perform(
-                    get("/api/v1/lectures?year=2025&semester=SPRING&keyword=수학&limit=5")
-                        .header("Authorization", "Bearer $token")
-                ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.paging.hasNext").value(true))
-        }
+        mvc
+            .perform(
+                get("/api/v1/lectures?year=2025&semester=SPRING&keyword=수학&limit=5")
+                    .header("Authorization", "Bearer $token")
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.paging.hasNext").value(true))
+    }
 
     @Test
     fun `should return correct course list and total credits when retrieving timetable details`() {
@@ -396,10 +396,11 @@ class TimetableIntegrationTest
             // LectureDto가 정상적으로 내려오는지만 확인
             .andExpect(jsonPath("$.title").value("데이터베이스"))
     }
+
     private fun assertKeywordIsInLectures(
         keyword: String,
         lectures: List<LectureDto>
-    ){
+    ) {
         lectures.forEach {
             assertTrue(
                 it.title.contains(keyword)
@@ -408,4 +409,4 @@ class TimetableIntegrationTest
             )
         }
     }
-    }
+}
